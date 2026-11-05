@@ -15,6 +15,8 @@ import {
   ChevronDown,
   Layers,
   ArrowRightLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +24,7 @@ import { useDisclosure } from "@/hooks/use-disclosure";
 import { branchNav, topNav } from "@/config/nav";
 import { cn } from "@/lib/utils/cn";
 import { useAuth, DEMO_USERS, type UserRole } from "@/lib/auth/auth-context";
+import { useSidebar } from "./sidebar-context";
 
 const ROLE_BADGE_STYLE: Record<UserRole, { label: string; class: string }> = {
   admin: {
@@ -49,6 +52,7 @@ const ROLE_BADGE_STYLE: Record<UserRole, { label: string; class: string }> = {
 export function Topbar({ branchId }: { branchId?: string }) {
   const mobile = useDisclosure(false);
   const { user, isAuthenticated, logout, loginAsDemoRole } = useAuth();
+  const { collapsed, toggle: toggleSidebar } = useSidebar();
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
   const items = branchId ? [...topNav, ...branchNav(branchId)] : topNav;
@@ -87,6 +91,20 @@ export function Topbar({ branchId }: { branchId?: string }) {
           >
             <Menu className="size-4" />
           </Button>
+
+          {/* Desktop Sidebar Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden lg:flex p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-900 transition-colors"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4.5" />
+            ) : (
+              <PanelLeftClose className="size-4.5" />
+            )}
+          </button>
 
           <Link href="/branches" className="text-sm font-semibold flex items-center gap-2">
             <span className="rounded bg-orange-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm">
