@@ -2,6 +2,7 @@ export type NavItem = {
   title: string;
   href: string;
   match?: "prefix" | "exact";
+  role?: string;
 };
 
 /** Branch-scoped paths use `:branchId` replaced at runtime. */
@@ -18,6 +19,7 @@ export const branchNav = (branchId: string | number): NavItem[] => [
 ];
 
 export const topNav: NavItem[] = [
+  { title: "👑 SaaS Tenants (Platform)", href: "/tenants", match: "prefix" },
   { title: "Branches", href: "/branches", match: "prefix" },
   { title: "Customer QR View", href: "/order?branchId=1&tableId=1", match: "prefix" },
 ];
