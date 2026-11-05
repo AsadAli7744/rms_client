@@ -22,21 +22,23 @@ import {
 
 export function KitchenPageClient({ branchId }: { branchId: number }) {
   const queryClient = useQueryClient();
+  const [mounted, setMounted] = useState(false);
   const [stationFilter, setStationFilter] = useState<string>("all");
-  const [autoPrintEnabled, setAutoPrintEnabled] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("rms_auto_print_kitchen") === "true";
+  const [autoPrintEnabled, setAutoPrintEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("rms_auto_print_kitchen");
+    if (stored !== null) {
+      setAutoPrintEnabled(stored === "true");
     }
-    return true;
-  });
+  }, []);
 
   // Persist auto-print preference
   const toggleAutoPrint = () => {
     const next = !autoPrintEnabled;
     setAutoPrintEnabled(next);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("rms_auto_print_kitchen", String(next));
-    }
+    localStorage.setItem("rms_auto_print_kitchen", String(next));
   };
 
   // Connect to Live SSE push stream
@@ -106,10 +108,12 @@ export function KitchenPageClient({ branchId }: { branchId: number }) {
             <div className="flex items-center gap-2 text-xs text-neutral-400">
               <span
                 className={`inline-block h-2.5 w-2.5 rounded-full ${
-                  connected ? "bg-emerald-500 animate-pulse" : "bg-red-500"
+                  mounted && connected ? "bg-emerald-500 animate-pulse" : "bg-neutral-600"
                 }`}
               />
-              <span>{connected ? "Live Real-Time Sync Active" : "Connecting..."}</span>
+              <span suppressHydrationWarning>
+                {mounted && connected ? "Live Real-Time Sync Active" : "Connecting..."}
+              </span>
               <span>•</span>
               <span>Branch #{branchId}</span>
             </div>
@@ -122,16 +126,17 @@ export function KitchenPageClient({ branchId }: { branchId: number }) {
           <button
             type="button"
             onClick={toggleAutoPrint}
+            suppressHydrationWarning
             className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-              autoPrintEnabled
+              mounted && autoPrintEnabled
                 ? "border-emerald-600 bg-emerald-950/60 text-emerald-300"
                 : "border-neutral-700 bg-neutral-900 text-neutral-400 hover:text-white"
             }`}
           >
             <Printer className="h-4 w-4" />
-            <span>
+            <span suppressHydrationWarning>
               Auto-Print Thermal Printer:{" "}
-              <strong>{autoPrintEnabled ? "ON" : "OFF"}</strong>
+              <strong>{mounted ? (autoPrintEnabled ? "ON" : "OFF") : "ON"}</strong>
             </span>
           </button>
 
