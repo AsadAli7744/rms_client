@@ -56,6 +56,22 @@ export async function markOrderPrinted(id: number): Promise<Order> {
   return data;
 }
 
+export async function cancelOrder(id: number, reason?: string): Promise<Order> {
+  const { data } = await api.patch(`/orders/${id}/cancel`, { reason });
+  return data;
+}
+
+export async function purchaseStock(body: {
+  item_id: number;
+  quantity: number;
+  unit_cost?: number;
+  supplier?: string;
+  notes?: string;
+}): Promise<any> {
+  const { data } = await api.post('/menu-items/stock/purchase', body);
+  return data;
+}
+
 export async function fetchTableActiveOrder(
   tableId: number,
 ): Promise<{ activeOrder: Order | null; queuedOrders: Order[] }> {
@@ -111,4 +127,54 @@ export async function fetchMenuItems(restaurantId?: number): Promise<any[]> {
 export async function fetchDiningTables(branchId: number): Promise<any[]> {
   const { data } = await api.get(`/branches/${branchId}/dining-tables`);
   return data ?? [];
+}
+
+export async function fetchMenuCategories(restaurantId?: number): Promise<any[]> {
+  const { data } = await api.get('/menu-categories', {
+    params: { restaurant_id: restaurantId, limit: 100 },
+  });
+  return data.data ?? [];
+}
+
+export async function createMenuCategory(payload: {
+  restaurant_id: number;
+  name: string;
+  slug?: string;
+  description?: string;
+}): Promise<any> {
+  const slug = payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  const { data } = await api.post('/menu-categories', { ...payload, slug });
+  return data;
+}
+
+export async function createMenuItem(payload: {
+  restaurant_id: number;
+  category_id: number;
+  name: string;
+  slug?: string;
+  base_price: number;
+  sku?: string;
+  track_stock?: boolean;
+  stock_quantity?: number;
+  low_stock_threshold?: number;
+  preparation_station_type?: string;
+  short_description?: string;
+}): Promise<any> {
+  const slug = payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4);
+  const { data } = await api.post('/menu-items', { ...payload, slug });
+  return data;
+}
+
+export async function updateMenuItem(id: number, payload: Partial<{
+  name: string;
+  base_price: number;
+  category_id: number;
+  sku: string;
+  track_stock: boolean;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  is_active: boolean;
+}>): Promise<any> {
+  const { data } = await api.patch(`/menu-items/${id}`, payload);
+  return data;
 }

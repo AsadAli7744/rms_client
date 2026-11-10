@@ -3,6 +3,9 @@ export type ItemSalesRow = {
   item_name: string;
   category_name: string;
   sku: string | null;
+  stock_quantity?: number;
+  track_stock?: boolean;
+  low_stock_threshold?: number;
   total_quantity: number;
   total_revenue: number;
   orders_count: number;
@@ -32,6 +35,8 @@ export type ItemSalesReportResponse = {
   summary: {
     total_units_sold: number;
     total_revenue: number;
+    total_stock_on_hand?: number;
+    low_stock_count?: number;
     distinct_items_count: number;
   };
   items: ItemSalesRow[];

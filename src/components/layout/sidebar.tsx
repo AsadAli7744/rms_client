@@ -166,16 +166,20 @@ export function Sidebar({
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                <Link
-                  href="/login"
-                  className="text-[11px] text-blue-500 hover:underline"
-                >
-                  Switch Role
-                </Link>
+                {user.role === "admin" ? (
+                  <Link
+                    href="/select-role"
+                    className="text-[11px] text-purple-500 hover:underline"
+                  >
+                    Switch Role
+                  </Link>
+                ) : (
+                  <div></div>
+                )}
                 <button
                   type="button"
                   onClick={logout}
-                  className="inline-flex items-center gap-1 text-[11px] text-red-500 hover:text-red-400 font-medium"
+                  className="inline-flex items-center gap-1 text-[11px] text-red-500 hover:text-red-400 font-medium ml-auto"
                 >
                   <LogOut className="size-3" />
                   <span>Sign Out</span>

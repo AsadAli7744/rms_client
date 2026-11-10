@@ -19,7 +19,7 @@ export default function Home() {
     const branchId = user.branch_id || 1;
     switch (user.role) {
       case "admin":
-        router.replace("/tenants");
+        router.replace("/select-role");
         break;
       case "manager":
         router.replace(`/branches/${branchId}/item-sales`);

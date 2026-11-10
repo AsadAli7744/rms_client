@@ -187,72 +187,96 @@ export function Topbar({ branchId }: { branchId?: string }) {
               {/* Dropdown Menu */}
               {roleMenuOpen && (
                 <div className="absolute right-0 mt-2 w-64 rounded-xl border border-neutral-700 bg-neutral-900 p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-1 text-neutral-100">
+                  {/* User Profile Header */}
                   <div className="px-3 py-2 border-b border-neutral-800 mb-2">
                     <p className="text-xs font-bold text-white">{user?.name}</p>
                     <p className="text-[11px] text-neutral-400 font-mono">{user?.email}</p>
-                    <p className="text-[10px] text-purple-400 mt-0.5">
-                      {user?.restaurant?.name || "Grand Cafe & Bistro"}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${roleInfo.class}`}>
+                        {roleInfo.label}
+                      </span>
+                      {user?.restaurant?.name && (
+                        <p className="text-[11px] text-purple-400 truncate">
+                          {user.restaurant.name}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1">
-                    <ArrowRightLeft className="size-3" />
-                    <span>Switch Role Persona</span>
-                  </div>
+                  {/* Persona Switcher ONLY for SaaS Super Admin (`admin`) */}
+                  {user?.role === "admin" && (
+                    <>
+                      <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1">
+                        <ArrowRightLeft className="size-3" />
+                        <span>Switch Role Persona</span>
+                      </div>
 
-                  <div className="space-y-1 my-1">
-                    <button
-                      type="button"
-                      onClick={() => handleRoleSwitch("admin")}
-                      className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
-                        currentRole === "admin"
-                          ? "bg-purple-500/20 text-purple-300 font-semibold"
-                          : "hover:bg-neutral-800 text-neutral-300"
-                      }`}
-                    >
-                      <span>👑 SaaS Platform Owner</span>
-                      <span className="text-[10px] text-neutral-500">Tenants</span>
-                    </button>
+                      <div className="space-y-1 my-1">
+                        <button
+                          type="button"
+                          onClick={() => handleRoleSwitch("admin")}
+                          className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
+                            currentRole === "admin"
+                              ? "bg-purple-500/20 text-purple-300 font-semibold"
+                              : "hover:bg-neutral-800 text-neutral-300"
+                          }`}
+                        >
+                          <span>👑 SaaS Platform Owner</span>
+                          <span className="text-[10px] text-neutral-500">Tenants</span>
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRoleSwitch("manager")}
-                      className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
-                        currentRole === "manager"
-                          ? "bg-blue-500/20 text-blue-300 font-semibold"
-                          : "hover:bg-neutral-800 text-neutral-300"
-                      }`}
-                    >
-                      <span>🏢 Restaurant Owner</span>
-                      <span className="text-[10px] text-neutral-500">Sales/Mgt</span>
-                    </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRoleSwitch("manager")}
+                          className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
+                            currentRole === "manager"
+                              ? "bg-blue-500/20 text-blue-300 font-semibold"
+                              : "hover:bg-neutral-800 text-neutral-300"
+                          }`}
+                        >
+                          <span>🏢 Restaurant Owner</span>
+                          <span className="text-[10px] text-neutral-500">Sales/Mgt</span>
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRoleSwitch("cashier")}
-                      className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
-                        currentRole === "cashier"
-                          ? "bg-emerald-500/20 text-emerald-300 font-semibold"
-                          : "hover:bg-neutral-800 text-neutral-300"
-                      }`}
-                    >
-                      <span>💳 Cashier Staff</span>
-                      <span className="text-[10px] text-neutral-500">POS</span>
-                    </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRoleSwitch("cashier")}
+                          className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
+                            currentRole === "cashier"
+                              ? "bg-emerald-500/20 text-emerald-300 font-semibold"
+                              : "hover:bg-neutral-800 text-neutral-300"
+                          }`}
+                        >
+                          <span>💳 Cashier Staff</span>
+                          <span className="text-[10px] text-neutral-500">POS</span>
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRoleSwitch("kitchen")}
-                      className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
-                        currentRole === "kitchen"
-                          ? "bg-orange-500/20 text-orange-300 font-semibold"
-                          : "hover:bg-neutral-800 text-neutral-300"
-                      }`}
-                    >
-                      <span>🍳 Kitchen Staff</span>
-                      <span className="text-[10px] text-neutral-500">KDS</span>
-                    </button>
-                  </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRoleSwitch("kitchen")}
+                          className={`w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between transition-colors ${
+                            currentRole === "kitchen"
+                              ? "bg-orange-500/20 text-orange-300 font-semibold"
+                              : "hover:bg-neutral-800 text-neutral-300"
+                          }`}
+                        >
+                          <span>🍳 Kitchen Staff</span>
+                          <span className="text-[10px] text-neutral-500">KDS</span>
+                        </button>
+                      </div>
+
+                      <div className="pt-2 border-t border-neutral-800 mt-2 space-y-1">
+                        <Link
+                          href="/select-role"
+                          onClick={() => setRoleMenuOpen(false)}
+                          className="w-full text-left px-3 py-1.5 rounded-md text-xs flex items-center justify-between text-purple-300 hover:bg-purple-950/40 border border-purple-500/20 font-medium transition-colors"
+                        >
+                          <span>Role Launcher Screen</span>
+                          <span className="text-[10px] text-purple-400">View →</span>
+                        </Link>
+                      </div>
+                    </>
+                  )}
 
                   <div className="pt-2 border-t border-neutral-800 mt-2">
                     <button

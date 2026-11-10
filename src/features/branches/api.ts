@@ -13,6 +13,30 @@ export type BranchRow = {
   online_ordering_enabled: boolean;
 };
 
+export type CreateBranchPayload = {
+  restaurant_id: number;
+  name: string;
+  code: string;
+  phone?: string | null;
+  email?: string | null;
+  address_line_1: string;
+  address_line_2?: string | null;
+  city: string;
+  state?: string | null;
+  country: string;
+  postal_code?: string | null;
+  branch_status?: string;
+  dine_in_enabled?: boolean;
+  pickup_enabled?: boolean;
+  delivery_enabled?: boolean;
+  online_ordering_enabled?: boolean;
+};
+
+export async function createBranch(payload: CreateBranchPayload) {
+  const { data } = await api.post<BranchRow>("/branches", payload);
+  return data;
+}
+
 export async function fetchBranches(params: {
   page?: number;
   limit?: number;

@@ -1,5 +1,7 @@
 export type OrderSource = 'pos' | 'web' | 'phone' | 'admin';
 
+export type FulfillmentType = 'dine_in' | 'pickup' | 'delivery' | 'takeaway';
+
 export type OrderStatus =
   | 'draft'
   | 'placed'
@@ -55,6 +57,10 @@ export type Order = {
   table?: { id: number; code: string; name?: string | null } | null;
   order_number: string;
   source: OrderSource;
+  fulfillment_type?: FulfillmentType;
+  delivery_address?: string | null;
+  delivery_fee?: number;
+  cancellation_reason?: string | null;
   status: OrderStatus;
   subtotal: number;
   discount_type?: 'percentage' | 'fixed' | null;
@@ -92,6 +98,9 @@ export type CreateOrderInput = {
   branch_id: number;
   table_id?: number | null;
   source?: OrderSource;
+  fulfillment_type?: FulfillmentType;
+  delivery_address?: string | null;
+  delivery_fee?: number;
   customer_name?: string | null;
   customer_phone?: string | null;
   waiter_name?: string | null;
