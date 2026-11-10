@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
-    "dev:webpack": "next dev --webpack -p 3001",
+    "dev": "node scripts/dev.js",
+    "dev:webpack": "node scripts/dev.js --webpack",
+    "dev:strict": "next dev -p 3001",
     "clean": "node -e \"try { require('fs').rmSync('.next', { recursive: true, force: true }); } catch {}\"",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "node scripts/start.js",
     "lint": "eslint"
   },
   "dependencies": {
