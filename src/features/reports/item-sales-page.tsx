@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
 import { toast } from "sonner";
 import {
   fetchItemSalesReport,
@@ -88,6 +89,7 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
   });
 
   const restaurantId = branchData?.restaurant_id || menuItems[0]?.restaurant_id || 1;
+  const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
   // Categories
   const { data: menuCategories = [] } = useQuery({
@@ -678,16 +680,15 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
         <Card className="p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-neutral-500">Gross Item Revenue</span>
-            <DollarSign className="h-4 w-4 text-blue-600" />
+            <span className="font-bold text-xs text-blue-600 font-mono px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">
+              {currencySymbol.trim()}
+            </span>
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
             {reportLoading ? (
               <Spinner className="h-6 w-6" />
             ) : (
-              `$${(report?.summary.total_revenue ?? 0).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}`
+              formatMoney(report?.summary.total_revenue ?? 0)
             )}
           </div>
           <p className="mt-1 text-xs text-neutral-500">From counter, QR, & delivery sales</p>
@@ -842,11 +843,11 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
                             </div>
                           )}
                         </td>
-                        <td className="px-5 py-3.5 text-right text-neutral-600 dark:text-neutral-400">
-                          ${item.avg_price_per_unit.toFixed(2)}
+                        <td className="px-5 py-3.5 text-right font-mono text-neutral-600 dark:text-neutral-400">
+                          {formatMoney(item.avg_price_per_unit)}
                         </td>
-                        <td className="px-5 py-3.5 text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                          ${item.total_revenue.toFixed(2)}
+                        <td className="px-5 py-3.5 text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                          {formatMoney(item.total_revenue)}
                         </td>
                         <td className="px-5 py-3.5 text-center">
                           <div className="inline-flex items-center gap-1.5">
@@ -954,7 +955,7 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
 
                 <div>
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Unit Cost ($)
+                    Unit Cost ({currencySymbol.trim()})
                   </label>
                   <Input
                     type="number"
@@ -1054,7 +1055,7 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Base Price ($ / Currency) *
+                    Base Price ({currencySymbol.trim()}) *
                   </label>
                   <Input
                     type="number"

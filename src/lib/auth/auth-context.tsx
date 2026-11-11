@@ -17,6 +17,7 @@ export interface AuthUser {
     id: number;
     name: string;
     code: string;
+    default_currency?: string;
   };
   branch?: {
     id: number;
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: data.name,
           email: data.email,
           role: roleKey as UserRole,
-          restaurant: { id: 1, name: "Grand Cafe & Bistro", code: "GCB" },
+          restaurant: { id: 1, name: "Grand Cafe & Bistro", code: "GCB", default_currency: "PKR" },
           branch: { id: 1, name: "Downtown Main Branch", code: "DT-01" },
         };
         const mockToken = `rms-demo-token-${roleKey}-${Date.now()}`;
@@ -156,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: demo.name,
         email: demo.email,
         role,
-        restaurant: { id: 1, name: "Grand Cafe & Bistro", code: "GCB" },
+        restaurant: { id: 1, name: "Grand Cafe & Bistro", code: "GCB", default_currency: "PKR" },
         branch: { id: 1, name: "Downtown Main Branch", code: "DT-01" },
       };
       const token = `demo-${role}-${Date.now()}`;

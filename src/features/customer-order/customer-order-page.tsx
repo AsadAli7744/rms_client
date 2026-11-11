@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api/client";
+import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
 import { fetchMenuItems, createOrder, fetchTableActiveOrder } from "../orders/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,19 @@ export function CustomerOrderPageClient({
   const [cart, setCart] = useState<{ [itemId: number]: { quantity: number; notes?: string } }>({});
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
 
+  // Fetch branch details to dynamically resolve restaurant
+  const { data: branchData } = useQuery({
+    queryKey: ["branch", branchId],
+    queryFn: async () => {
+      const { data } = await api.get(`/branches/${branchId}`);
+      return data;
+    },
+    enabled: Boolean(branchId),
+  });
+
+  const effectiveRestaurantId = branchData?.restaurant_id || restaurantId;
+  const { format: formatMoney } = useRestaurantCurrency(effectiveRestaurantId);
+
   // Check if table currently has an active order
   const { data: tableStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["table-active-order", tableId],
@@ -45,8 +60,8 @@ export function CustomerOrderPageClient({
 
   // Fetch branch menu items
   const { data: menuItems = [], isLoading: menuLoading } = useQuery({
-    queryKey: ["menu-items", restaurantId],
-    queryFn: () => fetchMenuItems(restaurantId),
+    queryKey: ["menu-items", effectiveRestaurantId],
+    queryFn: () => fetchMenuItems(effectiveRestaurantId),
   });
 
   const activeOrderOnTable = tableStatus?.activeOrder;
@@ -148,7 +163,7 @@ export function CustomerOrderPageClient({
               Your order has been automatically dispatched to the kitchen and cashier screen.
             </p>
             <div className="mt-4 border-t border-emerald-200 pt-3 text-xs text-neutral-600 dark:border-emerald-800 dark:text-neutral-400">
-              Total: <strong>${placedOrder.total_amount.toFixed(2)}</strong>
+              Total: <strong>{formatMoney(placedOrder.total_amount)}</strong>
             </div>
             <Button
               size="sm"
@@ -220,7 +235,7 @@ export function CustomerOrderPageClient({
                           </p>
                         )}
                         <div className="mt-1 font-semibold text-xs text-neutral-800 dark:text-neutral-200">
-                          ${Number(item.base_price).toFixed(2)}
+                          {formatMoney(item.base_price)}
                         </div>
                       </div>
 
@@ -291,7 +306,7 @@ export function CustomerOrderPageClient({
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs text-neutral-500">Order Subtotal</span>
-                <div className="text-lg font-bold">${cartSubtotal.toFixed(2)}</div>
+                <div className="text-lg font-bold">{formatMoney(cartSubtotal)}</div>
               </div>
               <Button
                 onClick={() => submitOrderMutation.mutate()}

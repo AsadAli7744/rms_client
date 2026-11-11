@@ -1,13 +1,31 @@
+export const CURRENCY_SYMBOLS: Record<string, string> = {
+  PKR: "Rs. ",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  AED: "AED ",
+  SAR: "SAR ",
+  INR: "₹",
+  CAD: "CA$",
+  AUD: "AU$",
+};
+
+export function getCurrencySymbol(currency?: string): string {
+  if (!currency) return "Rs. ";
+  const code = currency.trim().toUpperCase();
+  return CURRENCY_SYMBOLS[code] ?? `${code} `;
+}
+
 export function formatCurrency(
-  value: number,
-  currency = "USD",
-  locale = "en-US",
-) {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
+  value: number | string | null | undefined,
+  currency?: string,
+): string {
+  const num = typeof value === "string" ? parseFloat(value) || 0 : (value ?? 0);
+  const symbol = getCurrencySymbol(currency);
+  return `${symbol}${num.toLocaleString(undefined, {
     minimumFractionDigits: 2,
-  }).format(value);
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function formatNumber(value: number, locale = "en-US") {

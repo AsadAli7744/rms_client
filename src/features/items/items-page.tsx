@@ -28,6 +28,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
 import { api, parseApiError } from "@/lib/api/client";
 import { fetchMenuItems, fetchMenuCategories, createMenuCategory } from "@/features/orders/api";
 import { toast } from "sonner";
@@ -83,6 +84,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
   });
 
   const restaurantId = branchData?.restaurant_id || user?.restaurant_id || 1;
+  const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
   // Fetch menu items
   const { data: menuItems = [], isLoading: itemsLoading } = useQuery<MenuItem[]>({
@@ -481,10 +483,10 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-neutral-900 dark:text-white">
-                        ${Number(item.base_price).toFixed(2)}
+                        {formatMoney(item.base_price)}
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-neutral-400">
-                        {item.cost_price ? `$${Number(item.cost_price).toFixed(2)}` : "—"}
+                        {item.cost_price ? formatMoney(item.cost_price) : "—"}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
@@ -600,7 +602,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
 
               <div>
                 <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 block mb-1">
-                  Selling Price ($) *
+                  Selling Price ({currencySymbol.trim()}) *
                 </label>
                 <input
                   type="number"
@@ -653,7 +655,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Cost Price ($)
+                    Cost Price ({currencySymbol.trim()})
                   </label>
                   <input
                     type="number"
@@ -746,7 +748,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
 
                 <div>
                   <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Selling Price ($) *
+                    Selling Price ({currencySymbol.trim()}) *
                   </label>
                   <input
                     type="number"

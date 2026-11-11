@@ -27,6 +27,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
 import { api, parseApiError } from "@/lib/api/client";
 import { fetchMenuItems } from "@/features/orders/api";
 import { toast } from "sonner";
@@ -80,6 +81,7 @@ export function StockPageClient({ branchId }: { branchId: number }) {
   });
 
   const restaurantId = branchData?.restaurant_id || user?.restaurant_id || 1;
+  const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
   // Fetch items
   const { data: menuItems = [], isLoading: itemsLoading } = useQuery<MenuItem[]>({
@@ -291,10 +293,12 @@ export function StockPageClient({ branchId }: { branchId: number }) {
         <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm">
           <div className="flex items-center justify-between text-neutral-500 text-xs font-semibold uppercase">
             <span>Stock Valuation</span>
-            <DollarSign className="size-4 text-emerald-500" />
+            <span className="font-bold text-xs text-emerald-500 font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+              {currencySymbol.trim()}
+            </span>
           </div>
           <p className="text-2xl font-bold text-emerald-400 mt-2">
-            ${metrics.totalValuation.toFixed(2)}
+            {formatMoney(metrics.totalValuation)}
           </p>
           <p className="text-xs text-neutral-400 mt-1">Estimated total inventory value</p>
         </div>
@@ -405,7 +409,7 @@ export function StockPageClient({ branchId }: { branchId: number }) {
                           {item.name}
                         </div>
                         <div className="text-xs text-neutral-400 mt-0.5">
-                          Selling: ${Number(item.base_price).toFixed(2)}
+                          Selling: {formatMoney(item.base_price)}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -454,10 +458,10 @@ export function StockPageClient({ branchId }: { branchId: number }) {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right font-mono text-xs text-neutral-400">
-                        {item.cost_price ? `$${Number(item.cost_price).toFixed(2)}` : "—"}
+                        {item.cost_price ? formatMoney(item.cost_price) : "—"}
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-semibold text-neutral-900 dark:text-white">
-                        {isRegular ? "—" : `$${valuation.toFixed(2)}`}
+                        {isRegular ? "—" : formatMoney(valuation)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {isRegular ? (
@@ -535,7 +539,7 @@ export function StockPageClient({ branchId }: { branchId: number }) {
 
               <div>
                 <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 block mb-1">
-                  Unit Cost ($)
+                  Unit Cost ({currencySymbol.trim()})
                 </label>
                 <input
                   type="number"

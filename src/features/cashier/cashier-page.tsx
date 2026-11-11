@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { api } from "@/lib/api/client";
+import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
 import {
   fetchOrders,
   fetchOrder,
@@ -52,6 +54,19 @@ export function CashierPageClient({
   restaurantId?: number;
 }) {
   const queryClient = useQueryClient();
+
+  // Fetch branch details to dynamically resolve restaurant
+  const { data: branchData } = useQuery({
+    queryKey: ["branch", branchId],
+    queryFn: async () => {
+      const { data } = await api.get(`/branches/${branchId}`);
+      return data;
+    },
+    enabled: Boolean(branchId),
+  });
+
+  const effectiveRestaurantId = branchData?.restaurant_id || restaurantId;
+  const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(effectiveRestaurantId);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<
     "active" | "queued" | "delivery" | "completed" | "cancelled" | "all"
@@ -108,8 +123,8 @@ export function CashierPageClient({
 
   // Fetch menu items
   const { data: menuItems = [] } = useQuery({
-    queryKey: ["menu-items", restaurantId],
-    queryFn: () => fetchMenuItems(restaurantId),
+    queryKey: ["menu-items", effectiveRestaurantId],
+    queryFn: () => fetchMenuItems(effectiveRestaurantId),
   });
 
   // Currently selected order details
@@ -430,7 +445,7 @@ export function CashierPageClient({
                         )}
                         {order.discount_amount > 0 && (
                           <span className="font-medium text-amber-600">
-                            (-${order.discount_amount.toFixed(2)})
+                            (-{formatMoney(order.discount_amount)})
                           </span>
                         )}
                       </div>
@@ -438,7 +453,7 @@ export function CashierPageClient({
 
                     <div className="text-right">
                       <div className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                        ${order.total_amount.toFixed(2)}
+                        {formatMoney(order.total_amount)}
                       </div>
                       <div className="text-[10px] uppercase tracking-wider text-neutral-500">
                         {order.payment_status}
@@ -540,7 +555,7 @@ export function CashierPageClient({
                         <Truck className="h-3.5 w-3.5" /> Delivery Details
                       </span>
                       <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
-                        Fee: +${Number(selectedOrder.delivery_fee || 0).toFixed(2)}
+                        Fee: +{formatMoney(selectedOrder.delivery_fee || 0)}
                       </span>
                     </div>
                     {selectedOrder.customer_name && (
@@ -616,7 +631,7 @@ export function CashierPageClient({
                       )}
                     </div>
                     <div className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      ${item.subtotal.toFixed(2)}
+                      {formatMoney(item.subtotal)}
                     </div>
                   </div>
                 ))}
@@ -631,7 +646,7 @@ export function CashierPageClient({
                     </span>
                     {selectedOrder.discount_amount > 0 && (
                       <span className="text-amber-600">
-                        Current: -${selectedOrder.discount_amount.toFixed(2)} ({selectedOrder.discount_reason})
+                        Current: -{formatMoney(selectedOrder.discount_amount)} ({selectedOrder.discount_reason})
                       </span>
                     )}
                   </div>
@@ -643,7 +658,7 @@ export function CashierPageClient({
                       className="h-8 rounded border border-neutral-300 bg-white px-2 text-xs dark:border-neutral-700 dark:bg-neutral-900"
                     >
                       <option value="percentage">% Percent</option>
-                      <option value="fixed">$ Fixed</option>
+                      <option value="fixed">{currencySymbol.trim()} Fixed</option>
                     </select>
 
                     <Input
@@ -682,27 +697,27 @@ export function CashierPageClient({
               <div className="p-4 space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-semibold">${selectedOrder.subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">{formatMoney(selectedOrder.subtotal)}</span>
                 </div>
                 {selectedOrder.discount_amount > 0 && (
                   <div className="flex justify-between text-amber-600 dark:text-amber-400 font-semibold">
                     <span>Discount ({selectedOrder.discount_reason || "Promo"}):</span>
-                    <span>-${selectedOrder.discount_amount.toFixed(2)}</span>
+                    <span>-{formatMoney(selectedOrder.discount_amount)}</span>
                   </div>
                 )}
                 {Number(selectedOrder.delivery_fee || 0) > 0 && (
                   <div className="flex justify-between text-blue-600 dark:text-blue-400">
                     <span>Delivery Fee:</span>
-                    <span>+${Number(selectedOrder.delivery_fee).toFixed(2)}</span>
+                    <span>+{formatMoney(selectedOrder.delivery_fee || 0)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Estimated Tax (5%):</span>
-                  <span>${selectedOrder.tax_amount.toFixed(2)}</span>
+                  <span>{formatMoney(selectedOrder.tax_amount)}</span>
                 </div>
                 <div className="flex justify-between border-t border-neutral-200 pt-2 text-base font-bold text-neutral-900 dark:text-neutral-100">
                   <span>Total Amount:</span>
-                  <span>${selectedOrder.total_amount.toFixed(2)}</span>
+                  <span>{formatMoney(selectedOrder.total_amount)}</span>
                 </div>
               </div>
 
@@ -965,7 +980,7 @@ export function CashierPageClient({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400 block mb-1">
-                      Delivery Fee ($)
+                      Delivery Fee ({currencySymbol.trim()})
                     </label>
                     <Input
                       type="number"
@@ -1023,7 +1038,7 @@ export function CashierPageClient({
                           )}
                         </span>
                         <div className="flex items-center gap-2 text-[10px] text-neutral-500">
-                          <span>${Number(item.base_price).toFixed(2)}</span>
+                          <span>{formatMoney(item.base_price)}</span>
                           <span>•</span>
                           {isRegular ? (
                             <span className="text-cyan-600 dark:text-cyan-400 font-medium">

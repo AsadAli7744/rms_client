@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Store,
   DollarSign,
+  Banknote,
   Globe,
   Clock,
   Sparkles,
@@ -942,7 +943,7 @@ export default function TenantsPage() {
                       Default Currency
                     </span>
                     <p className="text-base font-semibold text-white mt-1 flex items-center gap-1.5">
-                      <DollarSign className="size-4 text-emerald-400" />
+                      <Banknote className="size-4 text-emerald-400" />
                       <span>{selectedTenantForInfo.default_currency}</span>
                     </p>
                   </div>
