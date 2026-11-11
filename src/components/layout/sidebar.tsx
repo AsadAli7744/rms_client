@@ -55,6 +55,10 @@ export function Sidebar({
     if (item.role === "admin" && user?.role !== "admin") {
       return false;
     }
+    // Manager-level modules (items, stock) are restricted to admin and manager
+    if (item.role === "manager" && user?.role !== "admin" && user?.role !== "manager") {
+      return false;
+    }
     // Hide "Branches" if the restaurant does not have multiple branches
     if (item.href === "/branches" && user?.role !== "admin" && !hasMultipleBranches) {
       return false;

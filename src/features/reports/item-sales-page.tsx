@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth/auth-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -45,6 +47,7 @@ import {
 } from "lucide-react";
 
 export function ItemSalesPageClient({ branchId }: { branchId: number }) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Preset dates helper
@@ -363,30 +366,50 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              setShowAddItemModal(true);
-            }}
-            className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs shadow-sm font-semibold"
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/branches/${branchId}/items`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:border-orange-500 hover:text-orange-500 transition-colors shadow-xs"
           >
-            <Plus className="h-4 w-4" />
-            <span>+ Add Menu Item</span>
-          </Button>
+            <Utensils className="size-3.5 text-orange-500" />
+            <span>Menu Items Catalog →</span>
+          </Link>
 
-          <Button
-            size="sm"
-            onClick={() => {
-              const firstTracked = menuItems.find((m: any) => m.track_stock !== false);
-              setStockPurchaseItemId(firstTracked?.id || menuItems[0]?.id || null);
-              setShowStockModal(true);
-            }}
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs shadow-sm"
+          <Link
+            href={`/branches/${branchId}/stock`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:border-emerald-500 hover:text-emerald-500 transition-colors shadow-xs"
           >
-            <Boxes className="h-4 w-4" />
-            <span>+ Add Stock / Purchase</span>
-          </Button>
+            <Package className="size-3.5 text-emerald-500" />
+            <span>Stock & Inventory →</span>
+          </Link>
+
+          {(user?.role === "admin" || user?.role === "manager") && (
+            <>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setShowAddItemModal(true);
+                }}
+                className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs shadow-sm font-semibold"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ Add Item</span>
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={() => {
+                  const firstTracked = menuItems.find((m: any) => m.track_stock !== false);
+                  setStockPurchaseItemId(firstTracked?.id || menuItems[0]?.id || null);
+                  setShowStockModal(true);
+                }}
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs shadow-sm"
+              >
+                <Boxes className="h-4 w-4" />
+                <span>+ Replenish Stock</span>
+              </Button>
+            </>
+          )}
 
           <Button
             variant="outline"

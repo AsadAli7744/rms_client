@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   Building2,
   Smartphone,
+  Utensils,
+  Package,
 } from "lucide-react";
 
 export type NavItem = {
@@ -29,6 +31,20 @@ export const branchNav = (branchId: string | number): NavItem[] => [
     href: `/branches/${branchId}/item-sales`,
     icon: BarChart3,
     match: "prefix",
+  },
+  {
+    title: "Menu Items",
+    href: `/branches/${branchId}/items`,
+    icon: Utensils,
+    match: "prefix",
+    role: "manager",
+  },
+  {
+    title: "Stock & Inventory",
+    href: `/branches/${branchId}/stock`,
+    icon: Package,
+    match: "prefix",
+    role: "manager",
   },
   {
     title: "Kitchen Display (KDS)",

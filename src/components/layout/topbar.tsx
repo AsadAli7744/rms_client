@@ -73,6 +73,7 @@ export function Topbar({ branchId }: { branchId?: string }) {
   const rawItems = branchId ? [...topNav, ...branchNav(branchId)] : topNav;
   const items = rawItems.filter((item) => {
     if (item.role === "admin" && user?.role !== "admin") return false;
+    if (item.role === "manager" && user?.role !== "admin" && user?.role !== "manager") return false;
     if (item.href === "/branches" && user?.role !== "admin" && !hasMultipleBranches) return false;
     if (user?.role === "cashier") return item.href.includes("/cashier") || item.href.includes("/tables");
     if (user?.role === "kitchen") return item.href.includes("/kitchen");
