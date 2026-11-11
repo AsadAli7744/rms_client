@@ -25,6 +25,8 @@ import { branchNav, topNav } from "@/config/nav";
 import { cn } from "@/lib/utils/cn";
 import { useAuth, DEMO_USERS, type UserRole } from "@/lib/auth/auth-context";
 import { useSidebar } from "./sidebar-context";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api/client";
 
 const ROLE_BADGE_STYLE: Record<UserRole, { label: string; class: string }> = {
   admin: {
@@ -55,9 +57,23 @@ export function Topbar({ branchId }: { branchId?: string }) {
   const { collapsed, toggle: toggleSidebar } = useSidebar();
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
+  const { data: branchCountData } = useQuery({
+    queryKey: ["topbar-branches-count", user?.restaurant_id],
+    queryFn: async () => {
+      const res = await api.get(`/branches?limit=2`);
+      return res.data?.total ?? 0;
+    },
+    enabled: !!user && user.role !== "admin",
+    staleTime: 60_000,
+  });
+
+  const branchCount = user?.role === "admin" ? 999 : (branchCountData ?? 1);
+  const hasMultipleBranches = branchCount > 1;
+
   const rawItems = branchId ? [...topNav, ...branchNav(branchId)] : topNav;
   const items = rawItems.filter((item) => {
     if (item.role === "admin" && user?.role !== "admin") return false;
+    if (item.href === "/branches" && user?.role !== "admin" && !hasMultipleBranches) return false;
     if (user?.role === "cashier") return item.href.includes("/cashier") || item.href.includes("/tables");
     if (user?.role === "kitchen") return item.href.includes("/kitchen");
     if (user?.role === "waiter") return item.href.includes("/cashier") || item.href.includes("/tables");

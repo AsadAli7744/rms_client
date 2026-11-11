@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { branchNav, topNav, type NavItem } from "@/config/nav";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/lib/auth/auth-context";
+import { api } from "@/lib/api/client";
 import { useSidebar } from "./sidebar-context";
 import {
   ChevronLeft,
@@ -30,6 +32,20 @@ export function Sidebar({
   const { user, isAuthenticated, logout } = useAuth();
   const { collapsed, toggle } = useSidebar();
 
+  // Query number of branches for current restaurant to hide "Branches" menu if single branch
+  const { data: branchCountData } = useQuery({
+    queryKey: ["sidebar-branches-count", user?.restaurant_id],
+    queryFn: async () => {
+      const res = await api.get(`/branches?limit=2`);
+      return res.data?.total ?? 0;
+    },
+    enabled: !!user && user.role !== "admin",
+    staleTime: 60_000,
+  });
+
+  const branchCount = user?.role === "admin" ? 999 : (branchCountData ?? 1);
+  const hasMultipleBranches = branchCount > 1;
+
   const rawItems: NavItem[] = branchId
     ? [...topNav, ...branchNav(branchId)]
     : topNav;
@@ -37,6 +53,10 @@ export function Sidebar({
   const items = rawItems.filter((item) => {
     // SaaS Tenants is strictly for SaaS Platform Owner (admin)
     if (item.role === "admin" && user?.role !== "admin") {
+      return false;
+    }
+    // Hide "Branches" if the restaurant does not have multiple branches
+    if (item.href === "/branches" && user?.role !== "admin" && !hasMultipleBranches) {
       return false;
     }
     // Operational staff roles only see their relevant tools

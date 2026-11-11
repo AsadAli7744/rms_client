@@ -37,6 +37,16 @@ export async function createBranch(payload: CreateBranchPayload) {
   return data;
 }
 
+export async function updateBranch(id: number, payload: Partial<CreateBranchPayload>) {
+  const { data } = await api.patch<BranchRow>(`/branches/${id}`, payload);
+  return data;
+}
+
+export async function archiveBranch(id: number) {
+  const { data } = await api.post<BranchRow>(`/branches/${id}/archive`);
+  return data;
+}
+
 export async function fetchBranches(params: {
   page?: number;
   limit?: number;
