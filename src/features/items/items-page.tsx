@@ -17,6 +17,7 @@ import {
   DollarSign,
   AlertCircle,
   ShieldAlert,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
+import { getStoredCache } from "@/lib/cache/browser-cache";
 import { api, parseApiError } from "@/lib/api/client";
 import { fetchMenuItems, fetchMenuCategories, createMenuCategory } from "@/features/orders/api";
 import { toast } from "sonner";
@@ -86,16 +88,27 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
   const restaurantId = branchData?.restaurant_id || user?.restaurant_id || 1;
   const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
-  // Fetch menu items
-  const { data: menuItems = [], isLoading: itemsLoading } = useQuery<MenuItem[]>({
+  // Fetch menu items with local cache hydration
+  const {
+    data: menuItems = [],
+    isLoading: itemsLoading,
+    isFetching: itemsFetching,
+    refetch: refetchItems,
+  } = useQuery<MenuItem[]>({
     queryKey: ["menu-items", restaurantId],
     queryFn: () => fetchMenuItems(restaurantId),
+    initialData: () => getStoredCache<MenuItem[]>(`menu-items:${restaurantId}`) || undefined,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
-  // Fetch categories
+  // Fetch categories with local cache hydration
   const { data: categories = [] } = useQuery({
     queryKey: ["menu-categories", restaurantId],
     queryFn: () => fetchMenuCategories(restaurantId),
+    initialData: () => getStoredCache<any[]>(`menu-categories:${restaurantId}`) || undefined,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   // State
@@ -330,13 +343,28 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
           </p>
         </div>
 
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          className="bg-orange-600 hover:bg-orange-500 text-white gap-2 shadow-sm"
-        >
-          <Plus className="size-4" />
-          <span>+ Add Menu Item</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await refetchItems();
+              toast.success("Menu items updated");
+            }}
+            disabled={itemsFetching}
+            className="gap-1.5 text-xs h-9"
+          >
+            <RefreshCw className={`size-3.5 ${itemsFetching ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </Button>
+          <Button
+            onClick={() => setAddModalOpen(true)}
+            className="bg-orange-600 hover:bg-orange-500 text-white gap-2 shadow-sm text-xs h-9"
+          >
+            <Plus className="size-4" />
+            <span>+ Add Menu Item</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}

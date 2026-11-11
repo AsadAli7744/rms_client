@@ -416,12 +416,15 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
+            onClick={async () => {
+              await refetch();
+              toast.success("Sales report updated");
+            }}
             disabled={isFetching}
-            className="flex items-center gap-1 text-xs"
+            className="flex items-center gap-1.5 text-xs"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
-            Refresh
+            <span>Refresh</span>
           </Button>
         </div>
       </div>

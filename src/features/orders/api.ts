@@ -2,6 +2,7 @@ import { api } from '@/lib/api/client';
 import type { Order, CreateOrderInput, OrderStatus, PaymentStatus } from '@/lib/types/orders';
 import type { PaginatedResponse } from '@/lib/types/common';
 import type { ItemSalesReportResponse, SalesSummaryResponse } from '@/lib/types/reports';
+import { getStoredCache, setStoredCache, invalidateStoredCache } from '@/lib/cache/browser-cache';
 
 export async function fetchOrders(params: {
   branch_id?: number;
@@ -69,6 +70,7 @@ export async function purchaseStock(body: {
   notes?: string;
 }): Promise<any> {
   const { data } = await api.post('/menu-items/stock/purchase', body);
+  invalidateStoredCache('menu-items');
   return data;
 }
 
@@ -118,22 +120,40 @@ export async function fetchSalesSummaryReport(params: {
 }
 
 export async function fetchMenuItems(restaurantId?: number): Promise<any[]> {
-  const { data } = await api.get('/menu-items', {
-    params: { restaurant_id: restaurantId, limit: 100 },
-  });
-  return data.data ?? [];
+  const cacheKey = `menu-items:${restaurantId || 'all'}`;
+  try {
+    const { data } = await api.get('/menu-items', {
+      params: { restaurant_id: restaurantId, limit: 100 },
+    });
+    const items = data.data ?? [];
+    setStoredCache(cacheKey, items, 30);
+    return items;
+  } catch (err) {
+    const cached = getStoredCache<any[]>(cacheKey);
+    if (cached) return cached;
+    throw err;
+  }
 }
 
 export async function fetchDiningTables(branchId: number): Promise<any[]> {
-  const { data } = await api.get(`/branches/${branchId}/dining-tables`);
+  const { data } = await api.get(`/branches/${branchId}/tables`);
   return data ?? [];
 }
 
 export async function fetchMenuCategories(restaurantId?: number): Promise<any[]> {
-  const { data } = await api.get('/menu-categories', {
-    params: { restaurant_id: restaurantId, limit: 100 },
-  });
-  return data.data ?? [];
+  const cacheKey = `menu-categories:${restaurantId || 'all'}`;
+  try {
+    const { data } = await api.get('/menu-categories', {
+      params: { restaurant_id: restaurantId, limit: 100 },
+    });
+    const categories = data.data ?? [];
+    setStoredCache(cacheKey, categories, 60);
+    return categories;
+  } catch (err) {
+    const cached = getStoredCache<any[]>(cacheKey);
+    if (cached) return cached;
+    throw err;
+  }
 }
 
 export async function createMenuCategory(payload: {
@@ -144,6 +164,7 @@ export async function createMenuCategory(payload: {
 }): Promise<any> {
   const slug = payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   const { data } = await api.post('/menu-categories', { ...payload, slug });
+  invalidateStoredCache('menu-categories');
   return data;
 }
 
@@ -162,6 +183,7 @@ export async function createMenuItem(payload: {
 }): Promise<any> {
   const slug = payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4);
   const { data } = await api.post('/menu-items', { ...payload, slug });
+  invalidateStoredCache('menu-items');
   return data;
 }
 
@@ -176,5 +198,6 @@ export async function updateMenuItem(id: number, payload: Partial<{
   is_active: boolean;
 }>): Promise<any> {
   const { data } = await api.patch(`/menu-items/${id}`, payload);
+  invalidateStoredCache('menu-items');
   return data;
 }

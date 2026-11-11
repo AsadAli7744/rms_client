@@ -5,6 +5,9 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/layout/page-header";
 import { ServerDataTable } from "@/components/table/server-data-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { formatDate } from "@/lib/utils/format";
 import { useReservationsQuery } from "@/features/branch/hooks";
 import type { ReservationRow } from "@/features/branch/api";
@@ -39,6 +42,21 @@ export function ReservationsListPage({ branchId }: { branchId: number }) {
         <PageHeader
           title="Reservations"
           description="Operational reservations for this branch."
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await q.refetch();
+                toast.success("Reservations updated");
+              }}
+              disabled={q.isFetching}
+              className="gap-1.5 text-xs"
+            >
+              <RefreshCw className={`size-3.5 ${q.isFetching ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </Button>
+          }
         />
         <ServerDataTable
           columns={columns}

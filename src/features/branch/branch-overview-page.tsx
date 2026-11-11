@@ -36,6 +36,7 @@ import {
   AlertCircle,
   Building2,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 
 export function BranchOverviewPage({ branchId }: { branchId: number }) {
@@ -131,6 +132,26 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
             >
               {branch?.branch_status === "active" ? "● Active Branch" : "Inactive"}
             </Badge>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await Promise.all([
+                  tablesQuery.refetch(),
+                  floorsQuery.refetch(),
+                  hallsQuery.refetch(),
+                  reservationsQuery.refetch(),
+                  menuItemsQuery.refetch(),
+                ]);
+                toast.success("Branch overview refreshed");
+              }}
+              disabled={tablesQuery.isFetching}
+              className="text-xs gap-1.5"
+            >
+              <RefreshCw className={`size-3.5 ${tablesQuery.isFetching ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </Button>
 
             <Button
               variant="outline"

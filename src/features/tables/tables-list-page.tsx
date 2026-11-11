@@ -20,7 +20,7 @@ import { ErrorState } from "@/components/feedback/error-state";
 import { Spinner } from "@/components/feedback/spinner";
 import { useDiningTablesQuery } from "@/features/branch/hooks";
 import type { DiningTableRow } from "@/features/branch/api";
-import { QrCode, ExternalLink, Copy, Check, Plus, Users, Utensils } from "lucide-react";
+import { QrCode, ExternalLink, Copy, Check, Plus, Users, Utensils, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 export function TablesListPage({ branchId }: { branchId: number }) {
@@ -139,12 +139,27 @@ export function TablesListPage({ branchId }: { branchId: number }) {
           title="Dining Tables & Customer QR"
           description="Manage dining tables, seating arrangements, and live customer self-ordering QR codes."
           actions={
-            <Button asChild className="bg-orange-600 hover:bg-orange-500 text-white gap-1.5">
-              <Link href={`/branches/${branchId}/tables/new`}>
-                <Plus className="size-4" />
-                <span>New Table</span>
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await q.refetch();
+                  toast.success("Tables list updated");
+                }}
+                disabled={q.isFetching}
+                className="gap-1.5 text-xs"
+              >
+                <RefreshCw className={`size-3.5 ${q.isFetching ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </Button>
+              <Button asChild className="bg-orange-600 hover:bg-orange-500 text-white gap-1.5">
+                <Link href={`/branches/${branchId}/tables/new`}>
+                  <Plus className="size-4" />
+                  <span>New Table</span>
+                </Link>
+              </Button>
+            </div>
           }
         />
 

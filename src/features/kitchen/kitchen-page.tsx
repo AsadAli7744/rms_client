@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchKitchenTickets, updateKitchenItemStatus, updateOrderStatus, markOrderPrinted } from "../orders/api";
 import { useLiveOrders, printThermalReceipt } from "../orders/use-live-orders";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,12 +144,15 @@ export function KitchenPageClient({ branchId }: { branchId: number }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
+            onClick={async () => {
+              await refetch();
+              toast.success("Kitchen tickets refreshed");
+            }}
             disabled={isFetching}
-            className="border-neutral-700 text-xs text-neutral-300 hover:bg-neutral-800"
+            className="border-neutral-700 text-xs text-neutral-300 hover:bg-neutral-800 gap-1.5"
           >
             <RotateCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
-            Refresh
+            <span>Refresh</span>
           </Button>
         </div>
       </div>

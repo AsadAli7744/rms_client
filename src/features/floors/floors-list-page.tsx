@@ -7,6 +7,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ServerDataTable } from "@/components/table/server-data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RefreshCw, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { useFloorsQuery } from "@/features/branch/hooks";
 import type { FloorRow } from "@/features/branch/api";
 import { useQueryFilters } from "@/hooks/use-query-filters";
@@ -39,9 +41,27 @@ export function FloorsListPage({ branchId }: { branchId: number }) {
           title="Floors"
           description="Structured floors for this branch (used by halls and seating maps)."
           actions={
-            <Button asChild>
-              <Link href={`/branches/${branchId}/floors/new`}>New floor</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await q.refetch();
+                  toast.success("Floors list updated");
+                }}
+                disabled={q.isFetching}
+                className="gap-1.5 text-xs"
+              >
+                <RefreshCw className={`size-3.5 ${q.isFetching ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </Button>
+              <Button asChild className="gap-1.5">
+                <Link href={`/branches/${branchId}/floors/new`}>
+                  <Plus className="size-4" />
+                  <span>New floor</span>
+                </Link>
+              </Button>
+            </div>
           }
         />
         <ServerDataTable

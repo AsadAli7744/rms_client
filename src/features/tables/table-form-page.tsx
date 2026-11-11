@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageContainer } from "@/components/layout/page-container";
@@ -34,6 +35,7 @@ type FormValues = z.infer<typeof schema>;
 
 export function TableFormPage({ branchId }: { branchId: number }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any,
     defaultValues: {
@@ -54,9 +56,9 @@ export function TableFormPage({ branchId }: { branchId: number }) {
         floor_id: Number.isFinite(values.floor_id as number) ? (values.floor_id as number) : null,
         hall_id: Number.isFinite(values.hall_id as number) ? (values.hall_id as number) : null,
       });
-      toast.success("Table created");
+      await queryClient.invalidateQueries({ queryKey: ["dining-tables"] });
+      toast.success(`Table "${values.code}" created successfully!`);
       router.push(`/branches/${branchId}/tables`);
-      router.refresh();
     } catch (e) {
       toast.error(parseApiError(e));
     }

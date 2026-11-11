@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageContainer } from "@/components/layout/page-container";
@@ -26,6 +27,7 @@ type FormValues = z.infer<typeof schema>;
 
 export function FloorFormPage({ branchId }: { branchId: number }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any,
     defaultValues: { name: "", code: "", sort_order: 0 },
@@ -39,9 +41,9 @@ export function FloorFormPage({ branchId }: { branchId: number }) {
         sort_order: values.sort_order ?? 0,
         is_active: true,
       });
-      toast.success("Floor created");
+      await queryClient.invalidateQueries({ queryKey: ["floors"] });
+      toast.success(`Floor "${values.name}" created successfully!`);
       router.push(`/branches/${branchId}/floors`);
-      router.refresh();
     } catch (e) {
       toast.error(parseApiError(e));
     }

@@ -1,6 +1,7 @@
 import { api } from "@/lib/api/client";
 import type { PaginatedResponse } from "@/lib/types/common";
 import { buildQueryString } from "@/lib/utils/query-string";
+import { invalidateStoredCache } from "@/lib/cache/browser-cache";
 
 export type FloorRow = {
   id: number;
@@ -99,6 +100,7 @@ export async function createFloor(branchId: number, body: {
   is_active?: boolean;
 }) {
   const { data } = await api.post<FloorRow>(`/branches/${branchId}/floors`, body);
+  invalidateStoredCache(`floors:${branchId}`);
   return data;
 }
 
@@ -110,6 +112,7 @@ export async function createHall(branchId: number, body: {
   is_active?: boolean;
 }) {
   const { data } = await api.post<HallRow>(`/branches/${branchId}/halls`, body);
+  invalidateStoredCache(`halls:${branchId}`);
   return data;
 }
 
@@ -126,5 +129,6 @@ export async function createDiningTable(
   },
 ) {
   const { data } = await api.post<DiningTableRow>(`/branches/${branchId}/tables`, body);
+  invalidateStoredCache(`dining-tables:${branchId}`);
   return data;
 }

@@ -7,6 +7,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ServerDataTable } from "@/components/table/server-data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RefreshCw, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { useHallsQuery } from "@/features/branch/hooks";
 import type { HallRow } from "@/features/branch/api";
 import { useQueryFilters } from "@/hooks/use-query-filters";
@@ -40,9 +42,27 @@ export function HallsListPage({ branchId }: { branchId: number }) {
           title="Halls"
           description="Halls belong to a floor and contain tables in the seating map."
           actions={
-            <Button asChild>
-              <Link href={`/branches/${branchId}/halls/new`}>New hall</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await q.refetch();
+                  toast.success("Halls list updated");
+                }}
+                disabled={q.isFetching}
+                className="gap-1.5 text-xs"
+              >
+                <RefreshCw className={`size-3.5 ${q.isFetching ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </Button>
+              <Button asChild className="gap-1.5">
+                <Link href={`/branches/${branchId}/halls/new`}>
+                  <Plus className="size-4" />
+                  <span>New hall</span>
+                </Link>
+              </Button>
+            </div>
           }
         />
         <ServerDataTable
