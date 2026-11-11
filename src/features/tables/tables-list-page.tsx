@@ -8,13 +8,6 @@ import { PageHeader } from "@/components/layout/page-header";
 import { DataTable } from "@/components/table/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { ErrorState } from "@/components/feedback/error-state";
 import { Spinner } from "@/components/feedback/spinner";
@@ -22,6 +15,7 @@ import { useDiningTablesQuery } from "@/features/branch/hooks";
 import type { DiningTableRow } from "@/features/branch/api";
 import { QrCode, ExternalLink, Copy, Check, Plus, Users, Utensils, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { TableQrDialog } from "@/components/ui/table-qr-dialog";
 
 export function TablesListPage({ branchId }: { branchId: number }) {
   const q = useDiningTablesQuery(branchId);
@@ -188,65 +182,15 @@ export function TablesListPage({ branchId }: { branchId: number }) {
           <DataTable data={rows} columns={columns} />
         ) : null}
 
-        {/* QR Code Inspection Modal */}
-        {selectedTableForQr && (
-          <Dialog open={!!selectedTableForQr} onOpenChange={() => setSelectedTableForQr(null)}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-base">
-                  <QrCode className="size-5 text-orange-500" />
-                  <span>Table QR Code — {selectedTableForQr.name || `Table ${selectedTableForQr.code}`}</span>
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-4 py-3">
-                <div className="flex flex-col items-center justify-center p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 text-center">
-                  <div className="p-3 bg-white rounded-xl shadow-xs border border-neutral-200 mb-3">
-                    <QrCode className="size-32 text-neutral-900" />
-                  </div>
-                  <span className="font-mono font-bold text-lg text-neutral-900 dark:text-white">
-                    {selectedTableForQr.code}
-                  </span>
-                  <span className="text-xs text-neutral-500 mt-0.5">
-                    Capacity: {selectedTableForQr.seating_capacity} Guests • Status: {selectedTableForQr.status}
-                  </span>
-                </div>
-
-                <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-3 space-y-1 bg-white dark:bg-neutral-950">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">
-                    Direct Customer Ordering URL
-                  </span>
-                  <p className="font-mono text-xs text-neutral-700 dark:text-neutral-300 break-all select-all">
-                    {getTableQrUrl(selectedTableForQr.id)}
-                  </p>
-                </div>
-              </div>
-
-              <DialogFooter className="flex flex-row justify-between sm:justify-between gap-2 border-t border-neutral-100 dark:border-neutral-800 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyTableLink(selectedTableForQr.id)}
-                  className="gap-1.5 text-xs"
-                >
-                  {copiedLink ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                  <span>{copiedLink ? "Copied Link!" : "Copy URL"}</span>
-                </Button>
-
-                <Button
-                  size="sm"
-                  asChild
-                  className="bg-orange-600 hover:bg-orange-500 text-white gap-1.5 text-xs"
-                >
-                  <Link href={getTableQrUrl(selectedTableForQr.id)} target="_blank">
-                    <ExternalLink className="size-3.5" />
-                    <span>Launch Ordering View</span>
-                  </Link>
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+        {/* High-Resolution Verified Scannable QR Code Dialog */}
+        <TableQrDialog
+          table={selectedTableForQr}
+          branchId={branchId}
+          open={!!selectedTableForQr}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTableForQr(null);
+          }}
+        />
       </div>
     </PageContainer>
   );

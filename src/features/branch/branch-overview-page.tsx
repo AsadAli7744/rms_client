@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/feedback/spinner";
+import { TableQrDialog } from "@/components/ui/table-qr-dialog";
 import { toast } from "sonner";
 import {
   Store,
@@ -42,6 +43,7 @@ import {
 export function BranchOverviewPage({ branchId }: { branchId: number }) {
   const { user } = useAuth();
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showOverviewQr, setShowOverviewQr] = useState(false);
 
   // Fetch branch details
   const { data: branch, isLoading: branchLoading, error: branchError } = useQuery({
@@ -417,7 +419,16 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowOverviewQr(true)}
+                className="text-xs gap-1.5"
+              >
+                <QrCode className="size-3.5" />
+                <span>Show Scannable QR</span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -440,6 +451,27 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
             </div>
           </div>
         </div>
+
+        {/* Real Scannable QR Dialog from Overview */}
+        <TableQrDialog
+          table={
+            tables[0] || {
+              id: 1,
+              code: "T-01",
+              name: "Table 1",
+              seating_capacity: 4,
+              status: "available",
+              branch_id: branchId,
+              floor_id: null,
+              hall_id: null,
+              floor: null,
+              section: null,
+            }
+          }
+          branchId={branchId}
+          open={showOverviewQr}
+          onOpenChange={setShowOverviewQr}
+        />
       </div>
     </PageContainer>
   );
