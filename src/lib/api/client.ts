@@ -10,6 +10,33 @@ export const api = axios.create({
   timeout: 30_000,
 });
 
+// Attach authenticated session context headers automatically to every request
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("rms_auth_token");
+      const userRaw = localStorage.getItem("rms_auth_user");
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      if (userRaw) {
+        try {
+          const user = JSON.parse(userRaw);
+          if (user.id != null) config.headers["x-user-id"] = String(user.id);
+          if (user.role) config.headers["x-user-role"] = String(user.role);
+          if (user.restaurant_id != null) config.headers["x-restaurant-id"] = String(user.restaurant_id);
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 export function parseApiError(err: unknown): string {
   const ax = err as AxiosError<ApiErrorBody>;
   const msg = ax.response?.data?.message;

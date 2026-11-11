@@ -30,9 +30,27 @@ export function Sidebar({
   const { user, isAuthenticated, logout } = useAuth();
   const { collapsed, toggle } = useSidebar();
 
-  const items: NavItem[] = branchId
+  const rawItems: NavItem[] = branchId
     ? [...topNav, ...branchNav(branchId)]
     : topNav;
+
+  const items = rawItems.filter((item) => {
+    // SaaS Tenants is strictly for SaaS Platform Owner (admin)
+    if (item.role === "admin" && user?.role !== "admin") {
+      return false;
+    }
+    // Operational staff roles only see their relevant tools
+    if (user?.role === "cashier") {
+      return item.href.includes("/cashier") || item.href.includes("/tables");
+    }
+    if (user?.role === "kitchen") {
+      return item.href.includes("/kitchen");
+    }
+    if (user?.role === "waiter") {
+      return item.href.includes("/cashier") || item.href.includes("/tables");
+    }
+    return true;
+  });
 
   return (
     <aside

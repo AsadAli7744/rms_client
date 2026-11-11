@@ -86,6 +86,7 @@ export const topNav: NavItem[] = [
     href: "/tenants",
     icon: ShieldCheck,
     match: "prefix",
+    role: "admin",
   },
   {
     title: "Branches",

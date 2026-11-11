@@ -55,7 +55,14 @@ export function Topbar({ branchId }: { branchId?: string }) {
   const { collapsed, toggle: toggleSidebar } = useSidebar();
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
-  const items = branchId ? [...topNav, ...branchNav(branchId)] : topNav;
+  const rawItems = branchId ? [...topNav, ...branchNav(branchId)] : topNav;
+  const items = rawItems.filter((item) => {
+    if (item.role === "admin" && user?.role !== "admin") return false;
+    if (user?.role === "cashier") return item.href.includes("/cashier") || item.href.includes("/tables");
+    if (user?.role === "kitchen") return item.href.includes("/kitchen");
+    if (user?.role === "waiter") return item.href.includes("/cashier") || item.href.includes("/tables");
+    return true;
+  });
   const activeBranch = branchId || (user?.branch_id ? String(user.branch_id) : "1");
 
   const currentRole = user?.role || "manager";
@@ -121,42 +128,50 @@ export function Topbar({ branchId }: { branchId?: string }) {
             </span>
           </div>
 
-          {/* Admin Tenants Tab link */}
-          <Link
-            href="/tenants"
-            className="hidden lg:inline-flex items-center gap-1 text-xs font-medium text-purple-400 hover:text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded px-2 py-1"
-          >
-            <Layers className="size-3" />
-            <span>SaaS Tenants</span>
-          </Link>
+          {/* Admin Tenants Tab link - ONLY for admin */}
+          {user?.role === "admin" && (
+            <Link
+              href="/tenants"
+              className="hidden lg:inline-flex items-center gap-1 text-xs font-medium text-purple-400 hover:text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded px-2 py-1"
+            >
+              <Layers className="size-3" />
+              <span>SaaS Tenants</span>
+            </Link>
+          )}
         </div>
 
         {/* Center / Right Side: Direct Role Views */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Quick Module Shortcuts */}
-          <Link
-            href={`/branches/${activeBranch}/item-sales`}
-            className="hidden xl:inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
-          >
-            <BarChart3 className="size-3.5 text-blue-500" />
-            <span>Sales</span>
-          </Link>
+          {(user?.role === "admin" || user?.role === "manager") && (
+            <Link
+              href={`/branches/${activeBranch}/item-sales`}
+              className="hidden xl:inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
+            >
+              <BarChart3 className="size-3.5 text-blue-500" />
+              <span>Sales</span>
+            </Link>
+          )}
 
-          <Link
-            href={`/branches/${activeBranch}/cashier`}
-            className="hidden sm:inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
-          >
-            <Banknote className="size-3.5 text-emerald-500" />
-            <span>Cashier POS</span>
-          </Link>
+          {(user?.role === "admin" || user?.role === "manager" || user?.role === "cashier") && (
+            <Link
+              href={`/branches/${activeBranch}/cashier`}
+              className="hidden sm:inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
+            >
+              <Banknote className="size-3.5 text-emerald-500" />
+              <span>Cashier POS</span>
+            </Link>
+          )}
 
-          <Link
-            href={`/branches/${activeBranch}/kitchen`}
-            className="hidden sm:inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
-          >
-            <UtensilsCrossed className="size-3.5 text-orange-500" />
-            <span>Kitchen KDS</span>
-          </Link>
+          {(user?.role === "admin" || user?.role === "manager" || user?.role === "kitchen") && (
+            <Link
+              href={`/branches/${activeBranch}/kitchen`}
+              className="hidden sm:inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
+            >
+              <UtensilsCrossed className="size-3.5 text-orange-500" />
+              <span>Kitchen KDS</span>
+            </Link>
+          )}
 
           <Link
             href={`/order?branchId=${activeBranch}&tableId=1`}
@@ -310,13 +325,15 @@ export function Topbar({ branchId }: { branchId?: string }) {
       {mobile.open ? (
         <div className="border-t border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950 lg:hidden">
           <div className="space-y-1">
-            <Link
-              href="/tenants"
-              className="block rounded-md px-3 py-2 text-sm font-semibold text-purple-400 hover:bg-purple-900/20"
-              onClick={mobile.onClose}
-            >
-              👑 SaaS Tenants Management
-            </Link>
+            {user?.role === "admin" && (
+              <Link
+                href="/tenants"
+                className="block rounded-md px-3 py-2 text-sm font-semibold text-purple-400 hover:bg-purple-900/20"
+                onClick={mobile.onClose}
+              >
+                👑 SaaS Tenants Management
+              </Link>
+            )}
             {items.map((item) => (
               <Link
                 key={item.href}
@@ -329,13 +346,26 @@ export function Topbar({ branchId }: { branchId?: string }) {
                 {item.title}
               </Link>
             ))}
-            <Link
-              href="/login"
-              className="block rounded-md px-3 py-2 text-sm font-medium text-orange-500 hover:bg-orange-500/10"
-              onClick={mobile.onClose}
-            >
-              Switch Role / Sign In
-            </Link>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  mobile.onClose();
+                  logout();
+                }}
+                className="block w-full text-left rounded-md px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="block rounded-md px-3 py-2 text-sm font-medium text-orange-500 hover:bg-orange-500/10"
+                onClick={mobile.onClose}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       ) : null}

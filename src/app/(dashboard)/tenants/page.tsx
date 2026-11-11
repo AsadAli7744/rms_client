@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
   Plus,
   ShieldCheck,
+  ShieldAlert,
   CheckCircle2,
   ExternalLink,
   Store,
@@ -235,8 +237,24 @@ function getRoleBadge(role: string) {
 }
 
 export default function TenantsPage() {
-  const { user, switchRestaurantTenant } = useAuth();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading, switchRestaurantTenant } = useAuth();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated || user?.role !== "admin") {
+      toast.error("Access Restricted: SaaS Platform Owner role required to access Tenants Administration.");
+      const branchId = user?.branch_id || 1;
+      router.replace(
+        user?.role === "cashier"
+          ? `/branches/${branchId}/cashier`
+          : user?.role === "kitchen"
+          ? `/branches/${branchId}/kitchen`
+          : `/branches/${branchId}/item-sales`
+      );
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedTenantForUsers, setSelectedTenantForUsers] = useState<RestaurantTenant | null>(null);
@@ -500,6 +518,34 @@ export default function TenantsPage() {
 
   const restaurants = data?.data ?? [];
 
+  if (authLoading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="size-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="size-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mb-4 shadow-lg shadow-red-500/10">
+          <ShieldAlert className="size-8 text-red-500" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Access Denied (403 Forbidden)</h2>
+        <p className="text-sm text-neutral-400 max-w-md mt-2">
+          The SaaS Multi-Tenant Administration portal is strictly restricted to SaaS Super Administrators. Restaurant managers and operational staff cannot view other tenant records.
+        </p>
+        <Link
+          href={`/branches/${user?.branch_id || 1}/item-sales`}
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500 transition-colors shadow-lg shadow-orange-600/20"
+        >
+          Return to My Restaurant Dashboard
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* SaaS Admin Banner */}
@@ -525,15 +571,6 @@ export default function TenantsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/select-role">
-              <Button
-                variant="outline"
-                className="border-purple-500/30 text-purple-300 hover:bg-purple-950/50 gap-1.5"
-              >
-                <Sparkles className="size-4 text-purple-400" />
-                <span>Switch Role Persona</span>
-              </Button>
-            </Link>
             <Button
               onClick={() => setCreateOpen(true)}
               className="bg-purple-600 hover:bg-purple-500 text-white gap-1.5 shadow-lg shadow-purple-600/25"

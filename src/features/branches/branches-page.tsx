@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, RefreshCw, Building2, Store } from "lucide-react";
@@ -27,8 +28,17 @@ import { branchColumns } from "@/features/branches/columns";
 import { createBranch, type CreateBranchPayload } from "@/features/branches/api";
 
 export function BranchesPageClient() {
+  const router = useRouter();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (user?.role === "cashier" || user?.role === "waiter") {
+      router.replace(`/branches/${user?.branch_id || 1}/cashier`);
+    } else if (user?.role === "kitchen") {
+      router.replace(`/branches/${user?.branch_id || 1}/kitchen`);
+    }
+  }, [user, router]);
   const { snapshot, setParams } = useQueryFilters();
   const page = Number(snapshot.page ?? "1") || 1;
   const limit = Number(snapshot.limit ?? "20") || 20;
@@ -66,11 +76,10 @@ export function BranchesPageClient() {
 
   const restaurants = restaurantsRes?.data || [];
 
-  const restaurantId = snapshot.restaurant_id
-    ? Number(snapshot.restaurant_id)
-    : user?.role !== "admin" && user?.restaurant_id
-    ? user.restaurant_id
-    : undefined;
+  // Force non-admins to strictly view only their assigned restaurant tenant
+  const restaurantId = user?.role !== "admin"
+    ? (user?.restaurant_id || 1)
+    : (snapshot.restaurant_id ? Number(snapshot.restaurant_id) : undefined);
 
   const query = useBranchesQuery({
     page,
