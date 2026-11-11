@@ -43,7 +43,7 @@ export default function Home() {
       <div className="size-10 rounded-xl bg-orange-600 flex items-center justify-center font-bold text-white mb-4 animate-pulse">
         RMS
       </div>
-      <p className="text-sm">Loading Multi-Tenant Workspace...</p>
+      <p className="text-sm">Loading Workspace...</p>
     </div>
   );
 }

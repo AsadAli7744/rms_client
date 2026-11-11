@@ -113,12 +113,29 @@ export function Topbar({ branchId }: { branchId?: string }) {
             )}
           </button>
 
-          <Link href="/branches" className="text-sm font-semibold flex items-center gap-2">
-            <span className="rounded bg-orange-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm">
-              RMS
-            </span>
-            <span className="hidden sm:inline font-bold">Multi-Tenant SaaS</span>
-          </Link>
+          {user?.role === "admin" ? (
+            <Link href="/tenants" className="text-sm font-semibold flex items-center gap-2">
+              <span className="rounded bg-orange-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+                RMS
+              </span>
+              <span className="hidden sm:inline font-bold">Multi-Tenant SaaS</span>
+            </Link>
+          ) : (
+            <Link
+              href={
+                user?.role === "cashier" || user?.role === "waiter"
+                  ? `/branches/${activeBranch}/cashier`
+                  : user?.role === "kitchen"
+                  ? `/branches/${activeBranch}/kitchen`
+                  : `/branches/${activeBranch}/item-sales`
+              }
+              className="text-sm font-semibold flex items-center gap-2"
+            >
+              <span className="rounded bg-orange-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+                RMS
+              </span>
+            </Link>
+          )}
 
           {/* Tenant Name Pill */}
           <div className="hidden md:flex items-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 px-2.5 py-1 text-xs text-neutral-600 dark:text-neutral-400">
