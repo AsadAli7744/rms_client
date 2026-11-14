@@ -76,8 +76,11 @@ export async function purchaseStock(body: {
 
 export async function fetchTableActiveOrder(
   tableId: number,
+  branchId: number,
 ): Promise<{ activeOrder: Order | null; queuedOrders: Order[] }> {
-  const { data } = await api.get(`/orders/table/${tableId}/active`);
+  const { data } = await api.get(`/orders/table/${tableId}/active`, {
+    params: { branchId },
+  });
   return data;
 }
 
@@ -170,7 +173,7 @@ export async function createMenuCategory(payload: {
 
 export async function createMenuItem(payload: {
   restaurant_id: number;
-  category_id: number;
+  category_id?: number;
   name: string;
   slug?: string;
   base_price: number;
@@ -181,7 +184,11 @@ export async function createMenuItem(payload: {
   preparation_station_type?: string;
   short_description?: string;
 }): Promise<any> {
-  const slug = payload.slug || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4);
+  const fromName = payload.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+  const slug = payload.slug || `${fromName || 'item'}-${Date.now().toString().slice(-4)}`;
   const { data } = await api.post('/menu-items', { ...payload, slug });
   invalidateStoredCache('menu-items');
   return data;

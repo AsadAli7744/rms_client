@@ -18,7 +18,7 @@ export const USER_ROLES_CONFIG: Record<UserRole, RoleConfig> = {
     badgeClass: "bg-purple-500/20 text-purple-300 border-purple-500/30",
     borderClass: "border-purple-500/30 hover:border-purple-500/60",
     description: "Oversee all restaurant tenants, platform billing, global metrics & infrastructure.",
-    defaultRoute: () => "/select-role",
+    defaultRoute: () => "/tenants",
   },
   manager: {
     key: "manager",
@@ -27,7 +27,7 @@ export const USER_ROLES_CONFIG: Record<UserRole, RoleConfig> = {
     badgeClass: "bg-blue-500/20 text-blue-300 border-blue-500/30",
     borderClass: "border-blue-500/30 hover:border-blue-500/60",
     description: "Branch operations, item sales analytics, staff, tables, floor layout & discounts.",
-    defaultRoute: (branchId) => `/branches/${branchId || 1}/item-sales`,
+    defaultRoute: (branchId) => (branchId ? `/branches/${branchId}/item-sales` : "/"),
   },
   cashier: {
     key: "cashier",
@@ -36,7 +36,7 @@ export const USER_ROLES_CONFIG: Record<UserRole, RoleConfig> = {
     badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
     borderClass: "border-emerald-500/30 hover:border-emerald-500/60",
     description: "Take orders at POS counter, manage 1-order-per-table queue, apply discounts & checkout.",
-    defaultRoute: (branchId) => `/branches/${branchId || 1}/cashier`,
+    defaultRoute: (branchId) => (branchId ? `/branches/${branchId}/cashier` : "/"),
   },
   kitchen: {
     key: "kitchen",
@@ -45,7 +45,7 @@ export const USER_ROLES_CONFIG: Record<UserRole, RoleConfig> = {
     badgeClass: "bg-orange-500/20 text-orange-300 border-orange-500/30",
     borderClass: "border-orange-500/30 hover:border-orange-500/60",
     description: "Live Kitchen Display System (KDS), thermal auto-printing & real-time ticket progression.",
-    defaultRoute: (branchId) => `/branches/${branchId || 1}/kitchen`,
+    defaultRoute: (branchId) => (branchId ? `/branches/${branchId}/kitchen` : "/"),
   },
   waiter: {
     key: "waiter",
@@ -54,6 +54,6 @@ export const USER_ROLES_CONFIG: Record<UserRole, RoleConfig> = {
     badgeClass: "bg-teal-500/20 text-teal-300 border-teal-500/30",
     borderClass: "border-teal-500/30 hover:border-teal-500/60",
     description: "Dine-in table order creation, customer table assistance & menu ordering.",
-    defaultRoute: (branchId) => `/branches/${branchId || 1}/cashier`,
+    defaultRoute: (branchId) => (branchId ? `/branches/${branchId}/cashier` : "/"),
   },
 };

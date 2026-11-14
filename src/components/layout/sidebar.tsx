@@ -50,31 +50,45 @@ export function Sidebar({
     ? [...topNav, ...branchNav(branchId)]
     : topNav;
 
-  const items = rawItems.filter((item) => {
-    // SaaS Tenants is strictly for SaaS Platform Owner (admin)
-    if (item.role === "admin" && user?.role !== "admin") {
-      return false;
-    }
-    // Manager-level modules (items, stock) are restricted to admin and manager
-    if (item.role === "manager" && user?.role !== "admin" && user?.role !== "manager") {
-      return false;
-    }
-    // Hide "Branches" if the restaurant does not have multiple branches
-    if (item.href === "/branches" && user?.role !== "admin" && !hasMultipleBranches) {
-      return false;
-    }
-    // Operational staff roles only see their relevant tools
-    if (user?.role === "cashier") {
-      return item.href.includes("/cashier") || item.href.includes("/tables");
-    }
-    if (user?.role === "kitchen") {
-      return item.href.includes("/kitchen");
-    }
-    if (user?.role === "waiter") {
-      return item.href.includes("/cashier") || item.href.includes("/tables");
-    }
-    return true;
-  });
+  const items = rawItems
+    .filter((item) => {
+      // SaaS Tenants is strictly for SaaS Platform Owner (admin)
+      if (item.role === "admin" && user?.role !== "admin") {
+        return false;
+      }
+      // Manager-level modules (items, stock) are restricted to admin and manager
+      if (item.role === "manager" && user?.role !== "admin" && user?.role !== "manager") {
+        return false;
+      }
+      // Public ordering requires a real branch and table selected from Tables & QR.
+      if (item.href.startsWith("/order") && !branchId) {
+        return false;
+      }
+      // Hide "Branches" if the restaurant does not have multiple branches
+      if (item.href === "/branches" && user?.role !== "admin" && !hasMultipleBranches) {
+        return false;
+      }
+      // Operational staff roles only see their relevant tools
+      if (user?.role === "cashier") {
+        return item.href.includes("/cashier") || item.href.includes("/tables");
+      }
+      if (user?.role === "kitchen") {
+        return item.href.includes("/kitchen");
+      }
+      if (user?.role === "waiter") {
+        return item.href.includes("/cashier") || item.href.includes("/tables");
+      }
+      return true;
+    })
+    .map((item) =>
+      item.href.startsWith("/order") && branchId
+        ? {
+            ...item,
+            title: "Customer QR Orders",
+            href: `/branches/${branchId}/tables`,
+          }
+        : item,
+    );
 
   return (
     <aside
@@ -208,16 +222,6 @@ export function Sidebar({
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                {user.role === "admin" ? (
-                  <Link
-                    href="/select-role"
-                    className="text-[11px] text-purple-500 hover:underline"
-                  >
-                    Switch Role
-                  </Link>
-                ) : (
-                  <div></div>
-                )}
                 <button
                   type="button"
                   onClick={logout}

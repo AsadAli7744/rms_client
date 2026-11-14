@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { getApiBaseUrl } from "@/lib/api/client";
 
 /**
  * Play a synthesized dual-tone chime without external audio files.
@@ -137,8 +138,11 @@ export function useLiveOrders({
       Notification.requestPermission().catch(() => {});
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
-    const sseUrl = `${apiUrl}/live-events/stream?branchId=${branchId}&role=${role}`;
+    const apiUrl = getApiBaseUrl();
+    const token = typeof window !== "undefined" ? localStorage.getItem("rms_auth_token") : null;
+    const sseUrl = `${apiUrl}/live-events/stream?branchId=${branchId}&role=${role}${
+      token ? `&token=${encodeURIComponent(token)}` : ""
+    }`;
     let eventSource: EventSource | null = null;
 
     try {

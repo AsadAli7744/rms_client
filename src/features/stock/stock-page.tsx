@@ -81,7 +81,7 @@ export function StockPageClient({ branchId }: { branchId: number }) {
     enabled: Boolean(branchId),
   });
 
-  const restaurantId = branchData?.restaurant_id || user?.restaurant_id || 1;
+  const restaurantId = branchData?.restaurant_id || user?.restaurant_id;
   const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
   // Fetch items with local cache hydration
@@ -253,7 +253,7 @@ export function StockPageClient({ branchId }: { branchId: number }) {
           </div>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
             Real-time inventory levels, reorder threshold alerts, and purchase stock replenishment for{" "}
-            <strong>{branchData?.name || "Downtown Main Branch"}</strong>.
+            <strong>{branchData?.name || user?.restaurant?.name || "your branch"}</strong>.
           </p>
         </div>
 

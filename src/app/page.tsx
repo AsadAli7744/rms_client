@@ -3,23 +3,39 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import { api } from "@/lib/api/client";
 
 export default function Home() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (isLoading) return;
+    let cancelled = false;
+    const run = async () => {
+    if (isLoading || cancelled) return;
 
     if (!isAuthenticated || !user) {
       router.replace("/login");
       return;
     }
 
-    const branchId = user.branch_id || 1;
+    let branchId = user.branch_id;
+    if (!branchId && user.role !== "admin") {
+      try {
+        const { data } = await api.get("/branches/default");
+        branchId = data?.id ?? null;
+      } catch {
+        router.replace("/login");
+        return;
+      }
+    }
+    if (!branchId && user.role !== "admin") {
+      router.replace("/login");
+      return;
+    }
     switch (user.role) {
       case "admin":
-        router.replace("/select-role");
+        router.replace("/tenants");
         break;
       case "manager":
         router.replace(`/branches/${branchId}/item-sales`);
@@ -36,6 +52,11 @@ export default function Home() {
       default:
         router.replace("/branches");
     }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, [isLoading, isAuthenticated, user, router]);
 
   return (

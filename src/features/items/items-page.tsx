@@ -42,6 +42,7 @@ interface MenuItem {
   name: string;
   slug?: string;
   description?: string;
+  short_description?: string;
   base_price: string | number;
   cost_price?: string | number;
   track_stock?: boolean;
@@ -85,7 +86,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
     enabled: Boolean(branchId),
   });
 
-  const restaurantId = branchData?.restaurant_id || user?.restaurant_id || 1;
+  const restaurantId = branchData?.restaurant_id || user?.restaurant_id;
   const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
   // Fetch menu items with local cache hydration
@@ -174,11 +175,10 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
   const createItemMutation = useMutation({
     mutationFn: async (payload: {
       restaurant_id: number;
-      category_id: number;
+      category_id?: number;
       name: string;
       base_price: number;
-      cost_price?: number;
-      description?: string;
+      short_description?: string;
       track_stock?: boolean;
       stock_quantity?: number;
     }) => {
@@ -188,6 +188,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
     onSuccess: (newItem) => {
       toast.success(`Menu item "${newItem.name}" added successfully!`);
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-categories"] });
       setAddModalOpen(false);
       setFormData({
         name: "",
@@ -254,20 +255,20 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
       toast.error("Item name is required");
       return;
     }
-    const catId = Number(formData.categoryId) || categories[0]?.id || 1;
     const price = parseFloat(formData.basePrice);
     if (isNaN(price) || price < 0) {
       toast.error("Valid selling price is required");
       return;
     }
 
+    const selectedCategory = Number(formData.categoryId);
+
     createItemMutation.mutate({
       restaurant_id: restaurantId,
-      category_id: catId,
+      ...(selectedCategory > 0 ? { category_id: selectedCategory } : {}),
       name: formData.name.trim(),
       base_price: price,
-      cost_price: formData.costPrice ? parseFloat(formData.costPrice) : undefined,
-      description: formData.description.trim() || undefined,
+      short_description: formData.description.trim() || undefined,
       track_stock: !formData.isRegularItem,
       stock_quantity: formData.isRegularItem ? 0 : Number(formData.initialStock) || 0,
     });
@@ -281,7 +282,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
         categoryId: item.category_id,
         basePrice: String(item.base_price),
         costPrice: item.cost_price ? String(item.cost_price) : "",
-        description: item.description || "",
+        description: item.short_description || item.description || "",
         trackStock: item.track_stock !== false,
         isActive: item.is_active !== false,
       });
@@ -305,10 +306,11 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
       id: editingItem.id,
       payload: {
         name: editFormData.name.trim(),
-        category_id: Number(editFormData.categoryId) || editingItem.category_id,
+        ...(Number(editFormData.categoryId) > 0
+          ? { category_id: Number(editFormData.categoryId) }
+          : {}),
         base_price: price,
-        cost_price: editFormData.costPrice ? parseFloat(editFormData.costPrice) : undefined,
-        description: editFormData.description.trim() || undefined,
+        short_description: editFormData.description.trim() || undefined,
         track_stock: editFormData.trackStock,
         is_active: editFormData.isActive,
       },
@@ -339,7 +341,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
           </div>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
             Configure dishes, prices, descriptions, and regular items (tea, rice) for{" "}
-            <strong>{branchData?.name || "Downtown Main Branch"}</strong>.
+            <strong>{branchData?.name || user?.restaurant?.name || "your branch"}</strong>.
           </p>
         </div>
 
@@ -486,9 +488,9 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
                         <div className="font-semibold text-neutral-900 dark:text-white">
                           {item.name}
                         </div>
-                        {item.description && (
+                        {(item.short_description || item.description) && (
                           <div className="text-xs text-neutral-400 truncate max-w-xs mt-0.5">
-                            {item.description}
+                            {item.short_description || item.description}
                           </div>
                         )}
                       </td>
@@ -582,7 +584,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                    Category *
+                    Category
                   </label>
                   <button
                     type="button"
@@ -618,7 +620,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                     className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                   >
-                    <option value="">Select Category...</option>
+                    <option value="">General (no category)</option>
                     {categories.map((c: any) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -626,6 +628,9 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
                     ))}
                   </select>
                 )}
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Optional. Leave this on General if the dish does not belong to a menu section yet.
+                </p>
               </div>
 
               <div>
@@ -759,7 +764,7 @@ export function ItemsPageClient({ branchId }: { branchId: number }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Category *
+                    Category
                   </label>
                   <select
                     value={editFormData.categoryId}

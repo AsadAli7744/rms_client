@@ -2,9 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
-  QrCode,
   LogIn,
   CheckCircle2,
   Lock,
@@ -13,6 +11,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useAuth, type UserRole } from "@/lib/auth/auth-context";
+import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -24,12 +23,17 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const redirectForRole = (role: UserRole, branchId: number | null) => {
-    const bId = branchId || 1;
+  const redirectForRole = async (role: UserRole, branchId: number | null) => {
+    let bId = branchId;
+    if (!bId && role !== "admin") {
+      const { data } = await api.get("/branches/default");
+      bId = data?.id ?? null;
+    }
+    if (!bId && role !== "admin") return;
     switch (role) {
       case "admin":
         // Super Admin lands on the Role Selector & Personas Control Center
-        router.push("/select-role");
+        router.push("/tenants");
         break;
       case "manager":
         router.push(`/branches/${bId}/item-sales`);
@@ -63,7 +67,7 @@ export default function LoginPage() {
     try {
       const user = await login(email, password);
       toast.success(`Welcome back, ${user.name}!`);
-      redirectForRole(user.role, user.branch_id);
+      await redirectForRole(user.role, user.branch_id);
     } catch (err: any) {
       const msg =
         err.response?.data?.message || err.message || "Invalid email or password";
@@ -94,14 +98,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Link
-          href="/order?branchId=1&tableId=1"
-          target="_blank"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/40 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-300 hover:bg-orange-500/20 transition-colors"
-        >
-          <QrCode className="size-3.5" />
-          <span>Customer QR Scan View</span>
-        </Link>
       </div>
 
       {/* Main Login Form (Standard Login Screen Only) */}

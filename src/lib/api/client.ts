@@ -1,8 +1,30 @@
 import axios, { type AxiosError } from "axios";
 import type { ApiErrorBody } from "@/lib/types/common";
 
-const baseURL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+/** API base URL. On a LAN host, localhost in the env is rewritten to that host. */
+export function getApiBaseUrl(): string {
+  const configured =
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+
+  if (typeof window === "undefined") return configured;
+
+  try {
+    const api = new URL(configured);
+    const pageHost = window.location.hostname;
+    const apiIsLocal = api.hostname === "localhost" || api.hostname === "127.0.0.1";
+    const pageIsLocal = pageHost === "localhost" || pageHost === "127.0.0.1";
+    if (apiIsLocal && !pageIsLocal && pageHost) {
+      api.hostname = pageHost;
+      return api.toString().replace(/\/$/, "");
+    }
+  } catch {
+    return configured;
+  }
+
+  return configured;
+}
+
+const baseURL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL,

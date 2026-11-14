@@ -88,7 +88,7 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
     queryFn: () => fetchMenuItems(),
   });
 
-  const restaurantId = branchData?.restaurant_id || menuItems[0]?.restaurant_id || 1;
+  const restaurantId = branchData?.restaurant_id || menuItems[0]?.restaurant_id;
   const { symbol: currencySymbol, format: formatMoney } = useRestaurantCurrency(restaurantId);
 
   // Categories
@@ -242,7 +242,10 @@ export function ItemSalesPageClient({ branchId }: { branchId: number }) {
 
       const stockQty = parseInt(newItemStock, 10);
       const lowThreshold = parseInt(newItemLowThreshold, 10);
-      const finalCategoryId = Number(categoryId) || 1;
+      const finalCategoryId = Number(categoryId);
+      if (!finalCategoryId) {
+        throw new Error("A menu category is required before this item can be saved.");
+      }
 
       return createMenuItem({
         restaurant_id: restaurantId,

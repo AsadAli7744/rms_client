@@ -5,7 +5,7 @@ import { getCurrencySymbol, formatCurrency } from "@/lib/utils/format";
 
 export function useRestaurantCurrency(restaurantId?: number) {
   const { user } = useAuth();
-  const targetId = restaurantId || user?.restaurant_id || 1;
+  const targetId = restaurantId || user?.restaurant_id;
 
   const { data: restaurant } = useQuery({
     queryKey: ["restaurant-currency", targetId],

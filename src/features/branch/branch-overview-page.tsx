@@ -55,7 +55,7 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
     enabled: Boolean(branchId),
   });
 
-  const restaurantId = branch?.restaurant_id || user?.restaurant_id || 1;
+  const restaurantId = branch?.restaurant_id || user?.restaurant_id;
   const { symbol: currencySymbol } = useRestaurantCurrency(restaurantId);
 
   // Queries for stats
@@ -77,11 +77,18 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
   const availableTables = tables.filter((t: any) => t.status === "available").length;
   const occupiedTables = tables.filter((t: any) => t.status === "occupied").length;
 
-  const qrOrderUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/order?branchId=${branchId}&tableId=1`
-    : `/order?branchId=${branchId}&tableId=1`;
+  const previewTable = tables[0] ?? null;
+  const qrOrderUrl = previewTable
+    ? typeof window !== "undefined"
+      ? `${window.location.origin}/order?branchId=${branchId}&tableId=${previewTable.id}`
+      : `/order?branchId=${branchId}&tableId=${previewTable.id}`
+    : "";
 
   const copyQrLink = () => {
+    if (!qrOrderUrl) {
+      toast.error("Add a dining table before copying a QR link.");
+      return;
+    }
     navigator.clipboard.writeText(qrOrderUrl);
     setCopiedLink(true);
     toast.success("Customer QR order link copied to clipboard!");
@@ -170,7 +177,7 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
               asChild
               className="bg-orange-600 hover:bg-orange-500 text-white text-xs gap-1.5"
             >
-              <Link href={`/order?branchId=${branchId}&tableId=1`} target="_blank">
+              <Link href={qrOrderUrl || `/branches/${branchId}/tables`} target="_blank">
                 <QrCode className="size-3.5" />
                 <span>Open Customer QR View</span>
                 <ExternalLink className="size-3 opacity-70" />
@@ -443,7 +450,7 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
                 asChild
                 className="bg-orange-600 hover:bg-orange-500 text-white text-xs gap-1.5"
               >
-                <Link href={`/order?branchId=${branchId}&tableId=1`} target="_blank">
+                <Link href={qrOrderUrl || `/branches/${branchId}/tables`} target="_blank">
                   <ExternalLink className="size-3.5" />
                   <span>Launch QR View</span>
                 </Link>
@@ -453,25 +460,14 @@ export function BranchOverviewPage({ branchId }: { branchId: number }) {
         </div>
 
         {/* Real Scannable QR Dialog from Overview */}
-        <TableQrDialog
-          table={
-            tables[0] || {
-              id: 1,
-              code: "T-01",
-              name: "Table 1",
-              seating_capacity: 4,
-              status: "available",
-              branch_id: branchId,
-              floor_id: null,
-              hall_id: null,
-              floor: null,
-              section: null,
-            }
-          }
-          branchId={branchId}
-          open={showOverviewQr}
-          onOpenChange={setShowOverviewQr}
-        />
+        {previewTable ? (
+          <TableQrDialog
+            table={previewTable}
+            branchId={branchId}
+            open={showOverviewQr}
+            onOpenChange={setShowOverviewQr}
+          />
+        ) : null}
       </div>
     </PageContainer>
   );

@@ -246,13 +246,16 @@ export default function TenantsPage() {
     if (authLoading) return;
     if (!isAuthenticated || user?.role !== "admin") {
       toast.error("Access Restricted: SaaS Platform Owner role required to access Tenants Administration.");
-      const branchId = user?.branch_id || 1;
+      if (!user?.branch_id) {
+        router.replace("/");
+        return;
+      }
       router.replace(
-        user?.role === "cashier"
-          ? `/branches/${branchId}/cashier`
-          : user?.role === "kitchen"
-          ? `/branches/${branchId}/kitchen`
-          : `/branches/${branchId}/item-sales`
+        user.role === "cashier"
+          ? `/branches/${user.branch_id}/cashier`
+          : user.role === "kitchen"
+          ? `/branches/${user.branch_id}/kitchen`
+          : `/branches/${user.branch_id}/item-sales`
       );
     }
   }, [authLoading, isAuthenticated, user, router]);
@@ -270,7 +273,7 @@ export default function TenantsPage() {
 
   const [defaultUsersConfig, setDefaultUsersConfig] = useState({
     domain: "",
-    password: "password123",
+    password: "",
     branch_id: "" as string | number,
   });
 
@@ -319,7 +322,12 @@ export default function TenantsPage() {
       ? selectedTenantForUsers.code.toLowerCase().replace(/[^a-z0-9]/g, "")
       : "rms";
     const domain = defaultUsersConfig.domain.trim() || `${cleanCode}.com`;
-    const pwd = defaultUsersConfig.password.trim() || "password123";
+    const pwd = defaultUsersConfig.password.trim();
+    if (!pwd) {
+      toast.error("Enter a password for these staff accounts.");
+      setBatchCreating(false);
+      return;
+    }
     const branchId = defaultUsersConfig.branch_id ? Number(defaultUsersConfig.branch_id) : null;
     const tenantName = selectedTenantForUsers.name;
 
@@ -538,7 +546,7 @@ export default function TenantsPage() {
           The SaaS Multi-Tenant Administration portal is strictly restricted to SaaS Super Administrators. Restaurant managers and operational staff cannot view other tenant records.
         </p>
         <Link
-          href={`/branches/${user?.branch_id || 1}/item-sales`}
+          href={user?.branch_id ? `/branches/${user.branch_id}/item-sales` : "/"}
           className="mt-6 inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500 transition-colors shadow-lg shadow-orange-600/20"
         >
           Return to My Restaurant Dashboard
@@ -613,7 +621,7 @@ export default function TenantsPage() {
               Current Tenant
             </span>
             <p className="text-sm font-semibold text-purple-300 mt-1 truncate">
-              {user?.restaurant?.name || "Grand Cafe & Bistro"}
+              {user?.restaurant?.name || "No tenant selected"}
             </p>
           </div>
         </div>
@@ -735,7 +743,7 @@ export default function TenantsPage() {
                             : "rms";
                           setDefaultUsersConfig({
                             domain: `${cleanCode}.com`,
-                            password: "password123",
+                            password: "",
                             branch_id: "",
                           });
                         }}
@@ -1200,7 +1208,11 @@ export default function TenantsPage() {
                         const domain =
                           defaultUsersConfig.domain.trim() ||
                           `${selectedTenantForUsers.code.toLowerCase()}.com`;
-                        const pwd = defaultUsersConfig.password.trim() || "password123";
+                        const pwd = defaultUsersConfig.password.trim();
+                        if (!pwd) {
+                          toast.error("Enter a password before copying credentials.");
+                          return;
+                        }
                         const text = [
                           `=== RMS Staff Credentials for ${selectedTenantForUsers.name} ===`,
                           `Branch Owner (Manager): manager@${domain} | Password: ${pwd}`,
@@ -1362,7 +1374,7 @@ export default function TenantsPage() {
                             onChange={(e) =>
                               setDefaultUsersConfig({ ...defaultUsersConfig, password: e.target.value })
                             }
-                            placeholder="password123"
+                            placeholder="Set a password"
                             className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                           />
                         </div>

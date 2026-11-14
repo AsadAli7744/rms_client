@@ -49,7 +49,7 @@ export function BranchesPageClient() {
   const [archivingBranch, setArchivingBranch] = useState<BranchRow | null>(null);
 
   const [formData, setFormData] = useState<CreateBranchPayload>({
-    restaurant_id: user?.restaurant_id || 1,
+    restaurant_id: user?.restaurant_id || 0,
     name: "",
     code: "",
     phone: "",
@@ -86,7 +86,7 @@ export function BranchesPageClient() {
 
   // Force non-admins to strictly view only their assigned restaurant tenant
   const restaurantId = user?.role !== "admin"
-    ? (user?.restaurant_id || 1)
+    ? user?.restaurant_id
     : (snapshot.restaurant_id ? Number(snapshot.restaurant_id) : undefined);
 
   const query = useBranchesQuery({
@@ -105,12 +105,12 @@ export function BranchesPageClient() {
   //    redirect directly to their item-sales dashboard because branch switching is irrelevant.
   useEffect(() => {
     if (user?.role === "cashier" || user?.role === "waiter") {
-      router.replace(`/branches/${user?.branch_id || 1}/cashier`);
+      if (user?.branch_id) router.replace(`/branches/${user.branch_id}/cashier`);
     } else if (user?.role === "kitchen") {
-      router.replace(`/branches/${user?.branch_id || 1}/kitchen`);
+      if (user?.branch_id) router.replace(`/branches/${user.branch_id}/kitchen`);
     } else if (user && user.role !== "admin" && !query.isLoading && total <= 1) {
-      const bId = user.branch_id || rows[0]?.id || 1;
-      router.replace(`/branches/${bId}/item-sales`);
+      const bId = user.branch_id || rows[0]?.id;
+      if (bId) router.replace(`/branches/${bId}/item-sales`);
     }
   }, [user, router, query.isLoading, total, rows]);
 
@@ -122,7 +122,7 @@ export function BranchesPageClient() {
       queryClient.invalidateQueries({ queryKey: ["sidebar-branches-count"] });
       setCreateOpen(false);
       setFormData({
-        restaurant_id: user?.restaurant_id || 1,
+        restaurant_id: user?.restaurant_id || 0,
         name: "",
         code: "",
         phone: "",

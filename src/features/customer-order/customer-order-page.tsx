@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { useRestaurantCurrency } from "@/hooks/use-restaurant-currency";
-import { fetchMenuItems, createOrder, fetchTableActiveOrder } from "../orders/api";
+import { formatCurrency } from "@/lib/utils/format";
+import { createOrder, fetchTableActiveOrder } from "../orders/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,9 @@ import {
 } from "lucide-react";
 
 export function CustomerOrderPageClient({
-  branchId = 1,
-  tableId = 1,
-  restaurantId = 1,
+  branchId = 0,
+  tableId = 0,
+  restaurantId = 0,
 }: {
   branchId?: number;
   tableId?: number;
@@ -38,30 +38,30 @@ export function CustomerOrderPageClient({
   const [cart, setCart] = useState<{ [itemId: number]: { quantity: number; notes?: string } }>({});
   const [placedOrder, setPlacedOrder] = useState<any | null>(null);
 
-  // Fetch branch details to dynamically resolve restaurant
-  const { data: branchData } = useQuery({
-    queryKey: ["branch", branchId],
+  // Public menu for this branch: its restaurant, currency, and items.
+  const { data: ordering, isLoading: menuLoading, isError: menuError } = useQuery({
+    queryKey: ["branch-ordering", branchId],
     queryFn: async () => {
-      const { data } = await api.get(`/branches/${branchId}`);
-      return data;
+      const { data } = await api.get(`/branches/${branchId}/ordering`);
+      return data as {
+        branch: { id: number; name: string; restaurant_id: number };
+        restaurant: { id: number; name: string; default_currency?: string };
+        items: any[];
+      };
     },
     enabled: Boolean(branchId),
   });
 
-  const effectiveRestaurantId = branchData?.restaurant_id || restaurantId;
-  const { format: formatMoney } = useRestaurantCurrency(effectiveRestaurantId);
+  const menuItems = ordering?.items ?? [];
+  const formatMoney = (value: number | string | null | undefined) =>
+    formatCurrency(value, ordering?.restaurant?.default_currency || "PKR");
 
   // Check if table currently has an active order
   const { data: tableStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
-    queryKey: ["table-active-order", tableId],
-    queryFn: () => fetchTableActiveOrder(tableId),
+    queryKey: ["table-active-order", branchId, tableId],
+    queryFn: () => fetchTableActiveOrder(tableId, branchId),
+    enabled: Boolean(branchId && tableId),
     refetchInterval: 12_000,
-  });
-
-  // Fetch branch menu items
-  const { data: menuItems = [], isLoading: menuLoading } = useQuery({
-    queryKey: ["menu-items", effectiveRestaurantId],
-    queryFn: () => fetchMenuItems(effectiveRestaurantId),
   });
 
   const activeOrderOnTable = tableStatus?.activeOrder;
@@ -78,7 +78,7 @@ export function CustomerOrderPageClient({
         }));
 
       return createOrder({
-        restaurant_id: restaurantId,
+        restaurant_id: ordering?.restaurant?.id || restaurantId,
         branch_id: branchId,
         table_id: tableId,
         source: "web",
@@ -122,8 +122,13 @@ export function CustomerOrderPageClient({
               <QrCode className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-sm font-bold">Restaurant QR Ordering</h1>
-              <p className="text-xs text-neutral-500">Dining Table #{tableId}</p>
+              <h1 className="text-sm font-bold">
+                {ordering?.restaurant?.name || "Restaurant QR Ordering"}
+              </h1>
+              <p className="text-xs text-neutral-500">
+                {ordering?.branch?.name ? `${ordering.branch.name} · ` : ""}
+                Dining Table #{tableId}
+              </p>
             </div>
           </div>
           {cartItemsCount > 0 && (
@@ -211,6 +216,10 @@ export function CustomerOrderPageClient({
             {menuLoading ? (
               <div className="flex justify-center py-12">
                 <Spinner className="h-6 w-6" />
+              </div>
+            ) : menuError ? (
+              <div className="py-12 text-center text-xs text-neutral-500">
+                This branch menu could not be loaded.
               </div>
             ) : filteredItems.length === 0 ? (
               <div className="py-12 text-center text-xs text-neutral-500">

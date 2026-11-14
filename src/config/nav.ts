@@ -112,7 +112,7 @@ export const topNav: NavItem[] = [
   },
   {
     title: "Customer QR View",
-    href: "/order?branchId=1&tableId=1",
+    href: "/order",
     icon: Smartphone,
     match: "prefix",
   },
